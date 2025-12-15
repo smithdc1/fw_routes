@@ -1,41 +1,136 @@
 {% extends 'routes/base.html' %}
+{% load humanize %}
 
 {% block title %}Routes - GPX Routes{% endblock %}
 
 {% block content %}
 <div class="row mb-3">
     <div class="col-12">
-        <h1 class="h3 mb-3">My Routes</h1>
+        <h1 class="h3 mb-3">Routes</h1>
         
-        <!-- Search and Filter -->
+        <!-- Search -->
         <form method="get" class="mb-3">
             <div class="row g-2">
-                <div class="col-md-8">
+                <div class="col-md-10">
                     <input type="text" name="search" class="form-control" placeholder="Search routes..." value="{{ search_query|default:'' }}">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-2">
                     <button type="submit" class="btn btn-primary w-100">
                         <i class="bi bi-search"></i> Search
                     </button>
                 </div>
             </div>
+            <!-- Preserve filter parameters -->
+            {% if active_distance %}
+            <input type="hidden" name="distance" value="{{ active_distance }}">
+            {% endif %}
+            {% if active_start_point %}
+            <input type="hidden" name="start_point" value="{{ active_start_point }}">
+            {% endif %}
+            {% if active_tag %}
+            <input type="hidden" name="tag" value="{{ active_tag }}">
+            {% endif %}
+            {% if active_sort %}
+            <input type="hidden" name="sort" value="{{ active_sort }}">
+            {% endif %}
         </form>
-        
+
+        <!-- Distance Filter -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Distance:</label>
+            <div class="d-flex flex-wrap gap-1">
+                <a href="{% querystring distance=None %}"
+                   class="btn btn-sm {% if not active_distance %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    All
+                </a>
+                <a href="{% querystring distance='short' %}"
+                   class="btn btn-sm {% if active_distance == 'short' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    Short (up to 20 mi)
+                </a>
+                <a href="{% querystring distance='medium' %}"
+                   class="btn btn-sm {% if active_distance == 'medium' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    Medium (20-35 mi)
+                </a>
+                <a href="{% querystring distance='long' %}"
+                   class="btn btn-sm {% if active_distance == 'long' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    Long (35-50 mi)
+                </a>
+                <a href="{% querystring distance='very_long' %}"
+                   class="btn btn-sm {% if active_distance == 'very_long' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    Very Long (50+ mi)
+                </a>
+            </div>
+        </div>
+
+        <!-- Start Point Filter -->
+        {% if all_start_points %}
+        <div class="mb-3">
+            <label class="form-label fw-bold">Start Point:</label>
+            <div class="d-flex flex-wrap gap-1">
+                <a href="{% querystring start_point=None %}"
+                   class="btn btn-sm {% if not active_start_point %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    All
+                </a>
+                {% for start_point in all_start_points %}
+                <a href="{% querystring start_point=start_point.name %}"
+                   class="btn btn-sm {% if active_start_point == start_point.name %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    {{ start_point.name }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Tag Filter -->
         {% if all_tags %}
         <div class="mb-3">
+            <label class="form-label fw-bold">Tags:</label>
             <div class="d-flex flex-wrap gap-1">
-                <a href="{% url 'route_list' %}" class="btn btn-sm {% if not active_tag %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                <a href="{% querystring tag=None %}"
+                   class="btn btn-sm {% if not active_tag %}btn-primary{% else %}btn-outline-primary{% endif %}">
                     All
                 </a>
                 {% for tag in all_tags %}
-                <a href="?tag={{ tag.name }}" class="btn btn-sm {% if active_tag == tag.name %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                <a href="{% querystring tag=tag.name %}"
+                   class="btn btn-sm {% if active_tag == tag.name %}btn-primary{% else %}btn-outline-primary{% endif %}">
                     {{ tag.name }}
                 </a>
                 {% endfor %}
             </div>
         </div>
         {% endif %}
+
+        <!-- Sort -->
+        <form method="get" class="mb-3">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <label class="form-label fw-bold mb-0">Sort by:</label>
+                </div>
+                <div class="col-md-3">
+                    <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="distance_asc" {% if active_sort == 'distance_asc' or not active_sort %}selected{% endif %}>Distance: Low to High</option>
+                        <option value="distance_desc" {% if active_sort == 'distance_desc' %}selected{% endif %}>Distance: High to Low</option>
+                        <option value="elevation_asc" {% if active_sort == 'elevation_asc' %}selected{% endif %}>Elevation: Low to High</option>
+                        <option value="elevation_desc" {% if active_sort == 'elevation_desc' %}selected{% endif %}>Elevation: High to Low</option>
+                        <option value="name_asc" {% if active_sort == 'name_asc' %}selected{% endif %}>Name: A to Z</option>
+                        <option value="name_desc" {% if active_sort == 'name_desc' %}selected{% endif %}>Name: Z to A</option>
+                    </select>
+                </div>
+            </div>
+            <!-- Preserve filter parameters -->
+            {% if active_distance %}
+            <input type="hidden" name="distance" value="{{ active_distance }}">
+            {% endif %}
+            {% if active_start_point %}
+            <input type="hidden" name="start_point" value="{{ active_start_point }}">
+            {% endif %}
+            {% if active_tag %}
+            <input type="hidden" name="tag" value="{{ active_tag }}">
+            {% endif %}
+            {% if search_query %}
+            <input type="hidden" name="search" value="{{ search_query }}">
+            {% endif %}
+        </form>
     </div>
 </div>
 
@@ -49,8 +144,11 @@
                 {% if route.thumbnail_url %}
                 <img src="{{ route.thumbnail_url }}" alt="{{ route.name }} map" style="width: 100%; height: 100%; object-fit: cover;">
                 {% else %}
-                <div class="d-flex align-items-center justify-content-center h-100">
-                    <i class="bi bi-map text-muted" style="font-size: 3rem;"></i>
+                <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
+                    <div class="spinner-border mb-2" role="status">
+                        <span class="visually-hidden">Processing...</span>
+                    </div>
+                    <small>Processing map...</small>
                 </div>
                 {% endif %}
             </div>
@@ -65,17 +163,17 @@
                 <!-- Stats -->
                 <div class="mb-2">
                     <small class="text-muted">
-                        <i class="bi bi-geo-alt"></i> {{ route.start_location|default:"Unknown location" }}
+                        <i class="bi bi-geo-alt"></i> {{ route.start_location|default:"Processing location..." }}
                     </small>
                 </div>
                 
                 <div class="mb-2">
                     <span class="badge bg-primary me-2">
-                        <i class="bi bi-arrow-left-right"></i> {{ route.distance_km|floatformat:2 }} km
+                        <i class="bi bi-arrow-left-right"></i> {{ route.distance_miles|floatformat:0 }} mi
                     </span>
                     {% if route.elevation_gain > 0 %}
                     <span class="badge bg-secondary">
-                        <i class="bi bi-arrow-up"></i> {{ route.elevation_gain|floatformat:0 }} m
+                        <i class="bi bi-arrow-up"></i> {{ route.elevation_gain|floatformat:0|intcomma }} m
                     </span>
                     {% endif %}
                 </div>

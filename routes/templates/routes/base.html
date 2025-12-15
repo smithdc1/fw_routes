@@ -3,144 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}GPX Routes{% endblock %}</title>
-    
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    
-    <style>
-        :root {
-            --primary-color: #0d6efd;
-        }
-        
-        body {
-            padding-bottom: 60px;
-        }
-        
-        .navbar-brand {
-            font-weight: bold;
-        }
-        
-        .route-card {
-            transition: transform 0.2s;
-            height: 100%;
-        }
-        
-        .route-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        
-        .route-map-container {
-            height: 200px;
-            background: #e9ecef;
-            border-radius: 0.375rem 0.375rem 0 0;
-            overflow: hidden;
-        }
-        
-        .route-map-container iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        
-        .tag {
-            display: inline-block;
-            padding: 0.25rem 0.5rem;
-            margin: 0.25rem 0.25rem 0.25rem 0;
-            background: var(--primary-color);
-            color: white;
-            border-radius: 1rem;
-            font-size: 0.875rem;
-        }
-        
-        .tag-removable {
-            cursor: pointer;
-        }
-        
-        .tag-removable:hover {
-            background: #dc3545;
-        }
-        
-        .detail-map-container {
-            height: 400px;
-            margin-bottom: 1.5rem;
-        }
-        
-        .detail-map-container iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            border-radius: 0.375rem;
-        }
-        
-        @media (min-width: 768px) {
-            .detail-map-container {
-                height: 500px;
-            }
-        }
-        
-        .share-box {
-            background: #f8f9fa;
-            padding: 1rem;
-            border-radius: 0.375rem;
-            border: 1px solid #dee2e6;
-        }
-        
-        .stat-box {
-            text-align: center;
-            padding: 1rem;
-            background: #f8f9fa;
-            border-radius: 0.375rem;
-            margin-bottom: 1rem;
-        }
-        
-        .stat-box h3 {
-            font-size: 1.75rem;
-            margin-bottom: 0.25rem;
-            color: var(--primary-color);
-        }
-        
-        .stat-box p {
-            margin: 0;
-            color: #6c757d;
-            font-size: 0.875rem;
-        }
-        
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            border-top: 1px solid #dee2e6;
-            padding: 0.5rem 0;
-            z-index: 1000;
-        }
-        
-        .bottom-nav a {
-            color: #6c757d;
-            text-decoration: none;
-            text-align: center;
-            font-size: 0.875rem;
-        }
-        
-        .bottom-nav a.active {
-            color: var(--primary-color);
-        }
-        
-        @media (min-width: 768px) {
-            body {
-                padding-bottom: 0;
-            }
-            
-            .bottom-nav {
-                display: none;
-            }
-        }
-    </style>
-    
+    <title>{% block title %}FreeWheeler Routes{% endblock %}</title>
+
+    {% load static %}
+
+    <!-- Bootstrap 5 CSS (vendored) -->
+    <link href="{% static 'routes/vendor/bootstrap/bootstrap.min.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'routes/vendor/bootstrap-icons/bootstrap-icons.css' %}">
+
+    <!-- Leaflet CSS (vendored) -->
+    <link rel="stylesheet" href="{% static 'routes/vendor/leaflet/leaflet.css' %}">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'routes/css/main.css' %}">
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -148,13 +24,13 @@
     <nav class="navbar navbar-expand-md navbar-dark bg-primary d-none d-md-block">
         <div class="container">
             <a class="navbar-brand" href="{% url 'route_list' %}">
-                <i class="bi bi-map"></i> GPX Routes
+                <i class="bi bi-map"></i> FreeWheeler Routes
             </a>
             <div class="navbar-nav ms-auto">
                 <a class="nav-link" href="{% url 'route_list' %}">Routes</a>
                 <a class="nav-link" href="{% url 'route_upload' %}">Upload</a>
                 <a class="nav-link" href="{% url 'bulk_upload' %}">Bulk Upload</a>
-                {% if not is_shared_view %}
+                {% if user.is_authenticated %}
                 <a class="nav-link" href="{% url 'logout' %}">Logout</a>
                 {% endif %}
             </div>
@@ -165,7 +41,7 @@
     <nav class="navbar navbar-dark bg-primary d-md-none">
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'route_list' %}">
-                <i class="bi bi-map"></i> GPX Routes
+                <i class="bi bi-map"></i> FreeWheeler Routes
             </a>
         </div>
     </nav>
@@ -186,9 +62,9 @@
     <main class="container my-4">
         {% block content %}{% endblock %}
     </main>
-    
+
     <!-- Mobile Bottom Navigation -->
-    {% if not is_shared_view %}
+    {% if user.is_authenticated %}
     <div class="bottom-nav d-md-none">
         <div class="container">
             <div class="row text-center">
@@ -214,10 +90,13 @@
         </div>
     </div>
     {% endif %}
-    
-    <!-- Bootstrap 5 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
+    <!-- Bootstrap 5 JS (vendored) -->
+    <script src="{% static 'routes/vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+
+    <!-- Leaflet JS (vendored) -->
+    <script src="{% static 'routes/vendor/leaflet/leaflet.js' %}"></script>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>

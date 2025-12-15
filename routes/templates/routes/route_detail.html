@@ -2,36 +2,63 @@
 
 {% block title %}{{ route.name }} - GPX Routes{% endblock %}
 
+{% block extra_css %}
+{{ tag_form.media.css }}
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
         <!-- Back Button -->
-        {% if not is_shared_view %}
+        {% if user.is_authenticated %}
         <a href="{% url 'route_list' %}" class="btn btn-sm btn-outline-secondary mb-3">
             <i class="bi bi-arrow-left"></i> Back to Routes
         </a>
         {% endif %}
         
-        <h1 class="h3 mb-3">{{ route.name }}</h1>
+        <!-- Route Title with Inline Rename -->
+        <div class="d-flex align-items-center mb-3">
+            <h1 class="h3 mb-0" id="routeTitle">{{ route.name }}</h1>
+            {% if user.is_authenticated %}
+            <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="editNameBtn" onclick="enableEditMode()">
+                <i class="bi bi-pencil"></i> Rename
+            </button>
+            {% endif %}
+        </div>
+
+        <!-- Hidden Rename Form -->
+        {% if user.is_authenticated %}
+        <div id="renameForm" style="display: none;" class="mb-3">
+            <form method="post" class="d-flex align-items-center">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="rename">
+                <input type="text" name="new_name" id="newNameInput" class="form-control me-2" value="{{ route.name }}" required>
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="bi bi-check"></i> Save
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="cancelEditMode()">
+                    <i class="bi bi-x"></i> Cancel
+                </button>
+            </form>
+        </div>
+        {% endif %}
         
         <!-- Map -->
-        {% if route.map_url %}
-        <div class="detail-map-container mb-4">
-            <iframe src="{{ route.map_url }}" scrolling="no"></iframe>
-        </div>
+        {% if route_coordinates %}
+        <div id="routeMap" class="detail-map-container mb-4"></div>
         {% endif %}
         
         <!-- Stats Grid -->
         <div class="row mb-4">
             <div class="col-6 col-md-3">
                 <div class="stat-box">
-                    <h3>{{ route.distance_km|floatformat:2 }}</h3>
+                    <h3>{{ route.distance_km|floatformat:1 }}</h3>
                     <p>Kilometers</p>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-box">
-                    <h3>{{ route.distance_miles|floatformat:2 }}</h3>
+                    <h3>{{ route.distance_miles|floatformat:1 }}</h3>
                     <p>Miles</p>
                 </div>
             </div>
@@ -43,8 +70,8 @@
             </div>
             <div class="col-6 col-md-3">
                 <div class="stat-box">
-                    <h3><i class="bi bi-geo-alt"></i></h3>
-                    <p>GPS Route</p>
+                    <h3>{{ route.estimated_time }}</h3>
+                    <p>Est. Time (12mph)</p>
                 </div>
             </div>
         </div>
@@ -56,9 +83,12 @@
                 
                 <div class="mb-3">
                     <strong>Start Location:</strong><br>
-                    {{ route.start_location|default:"Unknown" }}
-                    {% if route.start_lat and route.start_lon %}
-                    <br><small class="text-muted">{{ route.start_lat|floatformat:4 }}, {{ route.start_lon|floatformat:4 }}</small>
+                    {% if route.start_location %}
+                        {{ route.start_location }}
+                    {% elif route.start_lat and route.start_lon %}
+                        <small class="text-muted">{{ route.start_lat|floatformat:4 }}, {{ route.start_lon|floatformat:4 }}</small>
+                    {% else %}
+                        Unknown
                     {% endif %}
                 </div>
                 
@@ -77,40 +107,27 @@
         </div>
         
         <!-- Tags Section -->
-        {% if not is_shared_view %}
+        {% if user.is_authenticated %}
         <div class="card mb-4">
             <div class="card-body">
                 <h5 class="card-title">Tags</h5>
-                
-                <!-- Existing Tags -->
-                <div class="mb-3">
-                    {% if route.tags.all %}
-                        {% for tag in route.tags.all %}
-                        <form method="post" class="d-inline">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="remove_tag">
-                            <input type="hidden" name="tag_id" value="{{ tag.id }}">
-                            <button type="submit" class="tag tag-removable">
-                                {{ tag.name }} <i class="bi bi-x"></i>
-                            </button>
-                        </form>
-                        {% endfor %}
-                    {% else %}
-                        <p class="text-muted">No tags yet</p>
-                    {% endif %}
-                </div>
-                
-                <!-- Add Tags Form -->
+
                 <form method="post">
                     {% csrf_token %}
-                    <input type="hidden" name="action" value="add_tags">
-                    <div class="input-group">
-                        <input type="text" name="tags" class="form-control" placeholder="Add tags (comma-separated)">
+                    <input type="hidden" name="action" value="update_tags">
+
+                    <!-- TomSelect widget will render here -->
+                    {{ tag_form.tags }}
+
+                    <div class="mt-2">
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-plus-circle"></i> Add Tags
+                            <i class="bi bi-check-circle"></i> Update Tags
                         </button>
                     </div>
-                    <small class="text-muted">Separate multiple tags with commas</small>
+
+                    {% if tag_form.tags.help_text %}
+                    <small class="text-muted d-block mt-2">{{ tag_form.tags.help_text }}</small>
+                    {% endif %}
                 </form>
             </div>
         </div>
@@ -129,14 +146,14 @@
         </div>
         {% endif %}
         {% endif %}
-        
+
         <!-- Share Section -->
-        {% if not is_shared_view %}
+        {% if user.is_authenticated %}
         <div class="card mb-4">
             <div class="card-body">
                 <h5 class="card-title">Share This Route</h5>
                 <p class="text-muted">Anyone with this link can view the route (no login required)</p>
-                
+
                 <div class="share-box">
                     <div class="input-group">
                         <input type="text" class="form-control" id="shareUrl" value="{{ share_url }}" readonly>
@@ -144,23 +161,62 @@
                             <i class="bi bi-clipboard"></i> Copy
                         </button>
                     </div>
+                    <small id="copyFeedback" class="text-success" style="display: none; margin-top: 0.5rem;">
+                        <i class="bi bi-check-circle"></i> Link copied!
+                    </small>
                 </div>
+            </div>
+        </div>
+
+        <!-- Delete Section -->
+        <div class="card mb-4 border-danger">
+            <div class="card-body">
+                <h5 class="card-title text-danger">Delete Route</h5>
+                <p class="text-muted">Permanently delete this route and all associated data. This action cannot be undone.</p>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i class="bi bi-trash"></i> Delete This Route
+                </button>
             </div>
         </div>
         {% endif %}
     </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+{% if user.is_authenticated %}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'route_delete' route.pk %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Delete Route</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete <strong>{{ route.name }}</strong>? This action cannot be undone.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
-<script>
-function copyShareUrl() {
-    const shareUrl = document.getElementById('shareUrl');
-    shareUrl.select();
-    shareUrl.setSelectionRange(0, 99999); // For mobile devices
-    navigator.clipboard.writeText(shareUrl.value).then(() => {
-        alert('Share link copied to clipboard!');
-    });
-}
-</script>
+<!-- Include TomSelect media -->
+{{ tag_form.media.js }}
+
+<!-- Load route detail JavaScript -->
+{% load static %}
+<script src="{% static 'routes/js/route_detail.js' %}"></script>
+
+<!-- Safely embed JSON data using json_script (prevents XSS) -->
+{% if route_coordinates %}
+{{ route_coordinates|json_script:"route-coordinates-data" }}
+{% endif %}
 {% endblock %}

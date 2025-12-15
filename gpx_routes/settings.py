@@ -20,64 +20,71 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-mer)mnftbkk2j0xlo!a+78mwo6vz2xxwb62e3jvy(5$xr6&@wq'
+SECRET_KEY = "django-insecure-mer)mnftbkk2j0xlo!a+78mwo6vz2xxwb62e3jvy(5$xr6&@wq"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'storages',
-    'routes',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.humanize",
+    "django_tasks",
+    "django_tasks.backends.database",
+    "django_tomselect",
+    "storages",
+    "routes",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # Add WhiteNoise right after SecurityMiddleware
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django_tomselect.middleware.TomSelectMiddleware",
 ]
 
-ROOT_URLCONF = 'gpx_routes.urls'
+ROOT_URLCONF = "gpx_routes.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+                "django_tomselect.context_processors.tomselect",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'gpx_routes.wsgi.application'
+WSGI_APPLICATION = "gpx_routes.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 
@@ -87,16 +94,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -104,9 +111,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -116,50 +123,109 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 
 # Default primary key field type
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Session Settings - Keep users logged in
+# Session Settings - Keep users logged in with security hardening
 SESSION_COOKIE_AGE = 2592000  # 30 days in seconds
-SESSION_SAVE_EVERY_REQUEST = True
+SESSION_SAVE_EVERY_REQUEST = (
+    False  # Only save session when modified (performance + security)
+)
+SESSION_ENGINE = (
+    "django.contrib.sessions.backends.cached_db"  # Hybrid cache+db for performance
+)
+
+# Session Security Settings
+SESSION_COOKIE_HTTPONLY = (
+    True  # Prevent JavaScript access to session cookie (XSS protection)
+)
+SESSION_COOKIE_SAMESITE = "Lax"  # CSRF protection while allowing external navigation
+SESSION_COOKIE_SECURE = (
+    not DEBUG
+)  # Require HTTPS in production (disabled in dev for testing)
 
 # Login Settings
-LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/login/'
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/login/"
 
 # Static files
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Media files (user uploads)
+MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "/media/"
 
 # Backblaze B2 Storage Settings (using S3-compatible API)
 import os
 
-# Use django-storages for file uploads
-STORAGES = {
+# Use local storage in development, S3 in production
+if DEBUG:
+    # Local development - use filesystem storage with WhiteNoise for static files
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            # WhiteNoise with compression and cache busting (works in DEBUG mode too)
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+else:
+    # Production - use S3/B2 storage for media, WhiteNoise for static files
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        },
+        "staticfiles": {
+            # WhiteNoise with compression and cache busting for production
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+
+    # B2 S3-compatible API configuration
+    AWS_ACCESS_KEY_ID = os.environ.get("B2_KEY_ID", "your-b2-application-key-id")
+    AWS_SECRET_ACCESS_KEY = os.environ.get(
+        "B2_APPLICATION_KEY", "your-b2-application-key"
+    )
+    AWS_STORAGE_BUCKET_NAME = os.environ.get("B2_BUCKET_NAME", "your-bucket-name")
+    AWS_S3_REGION_NAME = os.environ.get("B2_REGION", "us-west-000")  # Your B2 region
+    AWS_S3_ENDPOINT_URL = os.environ.get(
+        "B2_ENDPOINT", f"https://s3.{AWS_S3_REGION_NAME}.backblazeb2.com"
+    )
+
+    # S3 settings
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = "public-read"
+    AWS_QUERYSTRING_AUTH = False  # Don't add auth params to URLs
+    AWS_S3_OBJECT_PARAMETERS = {
+        "CacheControl": "max-age=86400",  # 1 day cache
+    }
+
+    # Custom domain if you have one (optional)
+    # AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.backblazeb2.com'
+
+# Django Tasks Configuration
+TASKS = {
     "default": {
-        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-    },
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    },
+        "BACKEND": "django_tasks.backends.database.DatabaseBackend",
+    }
 }
 
-# B2 S3-compatible API configuration
-AWS_ACCESS_KEY_ID = os.environ.get('B2_KEY_ID', 'your-b2-application-key-id')
-AWS_SECRET_ACCESS_KEY = os.environ.get('B2_APPLICATION_KEY', 'your-b2-application-key')
-AWS_STORAGE_BUCKET_NAME = os.environ.get('B2_BUCKET_NAME', 'your-bucket-name')
-AWS_S3_REGION_NAME = os.environ.get('B2_REGION', 'us-west-000')  # Your B2 region
-AWS_S3_ENDPOINT_URL = os.environ.get('B2_ENDPOINT', f'https://s3.{AWS_S3_REGION_NAME}.backblazeb2.com')
+# File Upload Settings
+DATA_UPLOAD_MAX_NUMBER_FILES = 150
 
-# S3 settings
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL = 'public-read'
-AWS_QUERYSTRING_AUTH = False  # Don't add auth params to URLs
-AWS_S3_OBJECT_PARAMETERS = {
-    'CacheControl': 'max-age=86400',  # 1 day cache
+# django-tomselect Configuration
+TOMSELECT = {
+    "DEFAULT_CSS_FRAMEWORK": "bootstrap5",
 }
 
-# Custom domain if you have one (optional)
-# AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.backblazeb2.com'
+# WhiteNoise Configuration
+# Serve static files efficiently with compression and caching
+WHITENOISE_USE_FINDERS = DEBUG  # Allow serving from app directories in development
+WHITENOISE_AUTOREFRESH = DEBUG  # Auto-reload static files in development
+WHITENOISE_MAX_AGE = (
+    31536000 if not DEBUG else 0
+)  # Cache for 1 year in production, no cache in dev

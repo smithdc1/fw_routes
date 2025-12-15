@@ -18,7 +18,7 @@ A Django web application for managing GPS routes (GPX files) with mobile-first d
 ### 1. Install Dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
 
 If you want high-quality thumbnails with basemap (optional):
@@ -141,7 +141,7 @@ gpx_routes_project/
 │   │       └── login.html
 │   └── migrations/
 ├── manage.py
-├── requirements.txt
+├── pyproject.toml
 └── README.md
 ```
 
@@ -255,8 +255,8 @@ FROM python:3.12
 RUN apt-get update && apt-get install -y \
     libnss3 libatk1.0-0 libatk-bridge2.0-0
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+COPY pyproject.toml .
+RUN pip install .
 RUN playwright install chromium
 
 COPY . /app

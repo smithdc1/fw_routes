@@ -1,0 +1,166 @@
+{% extends 'routes/base.html' %}
+
+{% block title %}{{ route.name }} - GPX Routes{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Back Button -->
+        {% if not is_shared_view %}
+        <a href="{% url 'route_list' %}" class="btn btn-sm btn-outline-secondary mb-3">
+            <i class="bi bi-arrow-left"></i> Back to Routes
+        </a>
+        {% endif %}
+        
+        <h1 class="h3 mb-3">{{ route.name }}</h1>
+        
+        <!-- Map -->
+        {% if route.map_url %}
+        <div class="detail-map-container mb-4">
+            <iframe src="{{ route.map_url }}" scrolling="no"></iframe>
+        </div>
+        {% endif %}
+        
+        <!-- Stats Grid -->
+        <div class="row mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <h3>{{ route.distance_km|floatformat:2 }}</h3>
+                    <p>Kilometers</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <h3>{{ route.distance_miles|floatformat:2 }}</h3>
+                    <p>Miles</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <h3>{{ route.elevation_gain|floatformat:0 }}</h3>
+                    <p>Elevation Gain (m)</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-box">
+                    <h3><i class="bi bi-geo-alt"></i></h3>
+                    <p>GPS Route</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Details -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Route Details</h5>
+                
+                <div class="mb-3">
+                    <strong>Start Location:</strong><br>
+                    {{ route.start_location|default:"Unknown" }}
+                    {% if route.start_lat and route.start_lon %}
+                    <br><small class="text-muted">{{ route.start_lat|floatformat:4 }}, {{ route.start_lon|floatformat:4 }}</small>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Uploaded:</strong><br>
+                    {{ route.uploaded_at|date:"F j, Y g:i A" }}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>GPX File:</strong><br>
+                    <a href="{{ route.gpx_file_url }}" class="btn btn-sm btn-outline-primary" download>
+                        <i class="bi bi-download"></i> Download GPX
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tags Section -->
+        {% if not is_shared_view %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Tags</h5>
+                
+                <!-- Existing Tags -->
+                <div class="mb-3">
+                    {% if route.tags.all %}
+                        {% for tag in route.tags.all %}
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="remove_tag">
+                            <input type="hidden" name="tag_id" value="{{ tag.id }}">
+                            <button type="submit" class="tag tag-removable">
+                                {{ tag.name }} <i class="bi bi-x"></i>
+                            </button>
+                        </form>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No tags yet</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Add Tags Form -->
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_tags">
+                    <div class="input-group">
+                        <input type="text" name="tags" class="form-control" placeholder="Add tags (comma-separated)">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Add Tags
+                        </button>
+                    </div>
+                    <small class="text-muted">Separate multiple tags with commas</small>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <!-- Tags for shared view (read-only) -->
+        {% if route.tags.all %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Tags</h5>
+                <div>
+                    {% for tag in route.tags.all %}
+                    <span class="tag">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+        
+        <!-- Share Section -->
+        {% if not is_shared_view %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Share This Route</h5>
+                <p class="text-muted">Anyone with this link can view the route (no login required)</p>
+                
+                <div class="share-box">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="shareUrl" value="{{ share_url }}" readonly>
+                        <button class="btn btn-outline-primary" type="button" onclick="copyShareUrl()">
+                            <i class="bi bi-clipboard"></i> Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyShareUrl() {
+    const shareUrl = document.getElementById('shareUrl');
+    shareUrl.select();
+    shareUrl.setSelectionRange(0, 99999); // For mobile devices
+    navigator.clipboard.writeText(shareUrl.value).then(() => {
+        alert('Share link copied to clipboard!');
+    });
+}
+</script>
+{% endblock %}

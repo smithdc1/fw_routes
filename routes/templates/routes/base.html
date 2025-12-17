@@ -31,7 +31,10 @@
                 <a class="nav-link" href="{% url 'route_upload' %}">Upload</a>
                 <a class="nav-link" href="{% url 'bulk_upload' %}">Bulk Upload</a>
                 {% if user.is_authenticated %}
-                <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                <form method="post" action="{% url 'logout' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-link btn btn-link">Logout</button>
+                </form>
                 {% endif %}
             </div>
         </div>

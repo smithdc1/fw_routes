@@ -11,27 +11,36 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from dotenv import load_dotenv
+import dj_database_url
+import os
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+load_dotenv(str(BASE_DIR / ".env"))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-mer)mnftbkk2j0xlo!a+78mwo6vz2xxwb62e3jvy(5$xr6&@wq"
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG") == "True"
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "fw.smithdc.uk"]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://fw.smithdc.uk",
+]
 
 # Application definition
 
 INSTALLED_APPS = [
     "django.contrib.admin",
+    "whitenoise.runserver_nostatic",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -81,12 +90,7 @@ WSGI_APPLICATION = "gpx_routes.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
+DATABASES = {"default": dj_database_url.config(default="sqlite:///db.sqlite3")}
 
 
 # Password validation
@@ -115,10 +119,9 @@ LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = "UTC"
 
-USE_I18N = True
+USE_I18N = False
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
@@ -128,29 +131,6 @@ STATIC_URL = "static/"
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Session Settings - Keep users logged in with security hardening
-SESSION_COOKIE_AGE = 2592000  # 30 days in seconds
-SESSION_SAVE_EVERY_REQUEST = (
-    False  # Only save session when modified (performance + security)
-)
-SESSION_ENGINE = (
-    "django.contrib.sessions.backends.cached_db"  # Hybrid cache+db for performance
-)
-
-# Session Security Settings
-SESSION_COOKIE_HTTPONLY = (
-    True  # Prevent JavaScript access to session cookie (XSS protection)
-)
-SESSION_COOKIE_SAMESITE = "Lax"  # CSRF protection while allowing external navigation
-SESSION_COOKIE_SECURE = (
-    not DEBUG
-)  # Require HTTPS in production (disabled in dev for testing)
-
-# Login Settings
-LOGIN_URL = "/login/"
-LOGIN_REDIRECT_URL = "/"
-LOGOUT_REDIRECT_URL = "/login/"
-
 # Static files
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
@@ -158,8 +138,6 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
 
-# Backblaze B2 Storage Settings (using S3-compatible API)
-import os
 
 # Use local storage in development, S3 in production
 if DEBUG:
@@ -177,35 +155,21 @@ else:
     # Production - use S3/B2 storage for media, WhiteNoise for static files
     STORAGES = {
         "default": {
-            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "bucket_name": "BlogBucket",
+                "region_name": "us-east-005",
+                "endpoint_url": "https://s3.us-east-005.backblazeb2.com",
+                "access_key": "005c5af515dfbda0000000003",
+                "secret_key": os.getenv("BACKBLAZE_KEY"),
+                "querystring_auth": False,
+            },
         },
         "staticfiles": {
-            # WhiteNoise with compression and cache busting for production
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
 
-    # B2 S3-compatible API configuration
-    AWS_ACCESS_KEY_ID = os.environ.get("B2_KEY_ID", "your-b2-application-key-id")
-    AWS_SECRET_ACCESS_KEY = os.environ.get(
-        "B2_APPLICATION_KEY", "your-b2-application-key"
-    )
-    AWS_STORAGE_BUCKET_NAME = os.environ.get("B2_BUCKET_NAME", "your-bucket-name")
-    AWS_S3_REGION_NAME = os.environ.get("B2_REGION", "us-west-000")  # Your B2 region
-    AWS_S3_ENDPOINT_URL = os.environ.get(
-        "B2_ENDPOINT", f"https://s3.{AWS_S3_REGION_NAME}.backblazeb2.com"
-    )
-
-    # S3 settings
-    AWS_S3_FILE_OVERWRITE = False
-    AWS_DEFAULT_ACL = "public-read"
-    AWS_QUERYSTRING_AUTH = False  # Don't add auth params to URLs
-    AWS_S3_OBJECT_PARAMETERS = {
-        "CacheControl": "max-age=86400",  # 1 day cache
-    }
-
-    # Custom domain if you have one (optional)
-    # AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.backblazeb2.com'
 
 # Django Tasks Configuration
 TASKS = {
@@ -214,6 +178,9 @@ TASKS = {
     }
 }
 
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+
 # File Upload Settings
 DATA_UPLOAD_MAX_NUMBER_FILES = 150
 
@@ -221,11 +188,3 @@ DATA_UPLOAD_MAX_NUMBER_FILES = 150
 TOMSELECT = {
     "DEFAULT_CSS_FRAMEWORK": "bootstrap5",
 }
-
-# WhiteNoise Configuration
-# Serve static files efficiently with compression and caching
-WHITENOISE_USE_FINDERS = DEBUG  # Allow serving from app directories in development
-WHITENOISE_AUTOREFRESH = DEBUG  # Auto-reload static files in development
-WHITENOISE_MAX_AGE = (
-    31536000 if not DEBUG else 0
-)  # Cache for 1 year in production, no cache in dev

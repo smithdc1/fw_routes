@@ -19,6 +19,7 @@ dependencies = [
     "gunicorn>=22.0.0",
     "dotenv>=0.9.9",
     "dj-database-url>=3.0.1",
+    "psycopg>=3.3.2",
 ]
 
 [project.optional-dependencies]

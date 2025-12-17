@@ -12,6 +12,19 @@ body {
     font-weight: bold;
 }
 
+/* Style logout button to match nav links */
+.navbar .btn-link {
+    color: rgba(255, 255, 255, 0.55);
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border: none;
+}
+
+.navbar .btn-link:hover,
+.navbar .btn-link:focus {
+    color: rgba(255, 255, 255, 0.75);
+}
+
 .route-card {
     transition: transform 0.2s;
     height: 100%;

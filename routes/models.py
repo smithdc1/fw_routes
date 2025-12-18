@@ -68,9 +68,6 @@ class Route(models.Model):
     thumbnail_image = models.ImageField(
         upload_to="thumbnails/", blank=True
     )  # Static PNG for list view
-    map_html = models.FileField(
-        upload_to="maps/", blank=True
-    )  # Interactive HTML map for detail view
     route_coordinates = models.JSONField(
         default=list, blank=True
     )  # Store [[lat, lon], ...] for map rendering
@@ -78,8 +75,6 @@ class Route(models.Model):
     start_location = models.CharField(max_length=300, blank=True)
     start_lat = models.FloatField(null=True, blank=True)
     start_lon = models.FloatField(null=True, blank=True)
-    end_lat = models.FloatField(null=True, blank=True)
-    end_lon = models.FloatField(null=True, blank=True)
     elevation_gain = models.FloatField(default=0)
     tags = models.ManyToManyField(Tag, blank=True, related_name="routes")
     uploaded_at = models.DateTimeField(auto_now_add=True)
@@ -135,8 +130,3 @@ class Route(models.Model):
     def thumbnail_url(self):
         """Get the URL for the thumbnail image"""
         return self.thumbnail_image.url if self.thumbnail_image else ""
-
-    @property
-    def map_url(self):
-        """Get the URL for the interactive map"""
-        return self.map_html.url if self.map_html else ""

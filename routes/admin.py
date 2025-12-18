@@ -62,7 +62,6 @@ class RouteAdmin(admin.ModelAdmin):
                 "fields": (
                     "gpx_file",
                     "thumbnail_image",
-                    "map_html",
                     "distance_km",
                     "elevation_gain",
                 )
@@ -75,8 +74,6 @@ class RouteAdmin(admin.ModelAdmin):
                     "start_location",
                     "start_lat",
                     "start_lon",
-                    "end_lat",
-                    "end_lon",
                 )
             },
         ),

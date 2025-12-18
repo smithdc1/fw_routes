@@ -45,8 +45,6 @@ def create_route_from_gpx(gpx_file, name=None, tag_names=None):
         elevation_gain=gpx_data["elevation_gain"],
         start_lat=gpx_data["start_lat"],
         start_lon=gpx_data["start_lon"],
-        end_lat=gpx_data["end_lat"],
-        end_lon=gpx_data["end_lon"],
         route_coordinates=gpx_data["points"],  # Store coordinates in database
     )
 

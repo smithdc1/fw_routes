@@ -19,8 +19,6 @@ def parse_gpx(gpx_file):
         "points": [],
         "start_lat": None,
         "start_lon": None,
-        "end_lat": None,
-        "end_lon": None,
     }
 
     # Get track data
@@ -49,8 +47,6 @@ def parse_gpx(gpx_file):
     if data["points"]:
         data["start_lat"] = data["points"][0][0]
         data["start_lon"] = data["points"][0][1]
-        data["end_lat"] = data["points"][-1][0]
-        data["end_lon"] = data["points"][-1][1]
 
     # Use gpxpy's built-in calculations
     for track in gpx.tracks:

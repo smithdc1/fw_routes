@@ -13,4 +13,5 @@ urlpatterns = [
         views.TagAutocompleteView.as_view(),
         name="tag-autocomplete",
     ),
+    path("favicon.ico", views.favicon),
 ]

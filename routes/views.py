@@ -1,17 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_http_methods
-from django.http import JsonResponse
-from django.core.files.base import ContentFile
+from django.views.decorators.cache import cache_control
+from django.views.decorators.http import require_GET
 from django_tomselect.autocompletes import AutocompleteModelView
 from .models import Route, Tag, StartPoint
 from .forms import RouteUploadForm, BulkUploadForm, TagForm
 from .services import create_route_from_gpx
-import hashlib
-from datetime import datetime
-import json
-
+from django.conf import settings
+from django.http import FileResponse
 
 @login_required
 def route_list(request):
@@ -252,3 +249,9 @@ class TagAutocompleteView(AutocompleteModelView):
     def get_create_url(self):
         """Disable create URL"""
         return ""
+
+@require_GET
+@cache_control(max_age=60 * 60 * 24, immutable=True, public=True)  # one day
+def favicon(request):
+    file = (settings.BASE_DIR / "staticfiles" / "favicon" / "favicon.png").open("rb")
+    return FileResponse(file)

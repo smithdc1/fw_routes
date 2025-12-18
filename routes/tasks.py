@@ -70,8 +70,9 @@ def process_route_deferred(file_content, file_name, route_name=None, tag_names=N
         tag_names: Optional list of tag names
     """
     try:
-        # 1. Parse GPX file from bytes
-        gpx_file_obj = io.BytesIO(file_content)
+        # 1. Parse GPX file from bytes (convert to text mode for gpxpy)
+        gpx_text = file_content.decode('utf-8')
+        gpx_file_obj = io.StringIO(gpx_text)
         gpx_data = parse_gpx(gpx_file_obj)
 
         # 2. Create route with parsed data

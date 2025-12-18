@@ -27,9 +27,9 @@ class StartPointAdmin(admin.ModelAdmin):
     )
 
     class Media:
-        css = {"all": ("https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",)}
+        css = {"all": ("routes/vendor/leaflet/leaflet.css",)}
         js = (
-            "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+            "routes/vendor/leaflet/leaflet.js",
             "admin/js/map_widget.js",
         )
 

@@ -11,7 +11,7 @@ from .utils import parse_gpx
 from .tasks import process_route_async
 
 
-def create_route_from_gpx(gpx_file, name=None, tag_names=None):
+def create_route_from_gpx(gpx_file, name=None, tag_names=None, defer_parsing=False):
     """
     Create a Route object from a GPX file.
 
@@ -22,12 +22,13 @@ def create_route_from_gpx(gpx_file, name=None, tag_names=None):
         gpx_file: UploadedFile object containing GPX data
         name: Optional route name (uses GPX metadata or filename if not provided)
         tag_names: Optional list/iterable of tag names to attach to the route
+        defer_parsing: If True, skip parsing and defer to background task (for bulk uploads)
 
     Returns:
         Route object (saved to database)
 
     Raises:
-        ValueError: If GPX parsing fails
+        ValueError: If GPX parsing fails (when defer_parsing=False)
         Exception: If route creation fails for any other reason
 
     Example:
@@ -35,20 +36,27 @@ def create_route_from_gpx(gpx_file, name=None, tag_names=None):
         >>> gpx_file = request.FILES['gpx_file']
         >>> route = create_route_from_gpx(gpx_file, name="My Route", tag_names=["hiking", "trail"])
     """
-    # Parse GPX file to extract route data
-    gpx_data = parse_gpx(gpx_file)
+    if defer_parsing:
+        # For bulk uploads: create route with minimal info and defer parsing to background
+        route = Route(
+            name=name or gpx_file.name.replace(".gpx", ""),
+            # All other fields have defaults or are nullable
+        )
+    else:
+        # For single uploads: parse GPX file immediately to extract route data
+        gpx_data = parse_gpx(gpx_file)
 
-    # Create route with basic info (fast operations only)
-    route = Route(
-        name=name or gpx_data["name"] or gpx_file.name.replace(".gpx", ""),
-        distance_km=gpx_data["distance_km"],
-        elevation_gain=gpx_data["elevation_gain"],
-        start_lat=gpx_data["start_lat"],
-        start_lon=gpx_data["start_lon"],
-        end_lat=gpx_data["end_lat"],
-        end_lon=gpx_data["end_lon"],
-        route_coordinates=gpx_data["points"],  # Store coordinates in database
-    )
+        # Create route with parsed data
+        route = Route(
+            name=name or gpx_data["name"] or gpx_file.name.replace(".gpx", ""),
+            distance_km=gpx_data["distance_km"],
+            elevation_gain=gpx_data["elevation_gain"],
+            start_lat=gpx_data["start_lat"],
+            start_lon=gpx_data["start_lon"],
+            end_lat=gpx_data["end_lat"],
+            end_lon=gpx_data["end_lon"],
+            route_coordinates=gpx_data["points"],  # Store coordinates in database
+        )
 
     # Save GPX file to storage
     gpx_file.seek(0)
@@ -66,7 +74,7 @@ def create_route_from_gpx(gpx_file, name=None, tag_names=None):
                 route.tags.add(tag)
 
     # Queue background task for geocoding and thumbnail generation
-    # This keeps the upload fast by deferring slow operations
+    # (and GPX parsing if deferred)
     process_route_async.enqueue(route.id)
 
     return route

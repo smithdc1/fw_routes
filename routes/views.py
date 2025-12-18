@@ -189,8 +189,9 @@ def bulk_upload(request):
 
             for gpx_file in files:
                 try:
-                    # Use service layer to create route (same logic as single upload)
-                    create_route_from_gpx(gpx_file, tag_names=tag_names)
+                    # Use service layer with deferred parsing for bulk uploads
+                    # This prevents timeouts when uploading multiple large GPX files
+                    create_route_from_gpx(gpx_file, tag_names=tag_names, defer_parsing=True)
                     uploaded_count += 1
                 except Exception as e:
                     failed_files.append(f"{gpx_file.name} ({str(e)})")
@@ -199,7 +200,7 @@ def bulk_upload(request):
                 messages.success(
                     request,
                     f"Successfully uploaded {uploaded_count} route(s)! "
-                    "Locations and thumbnails are being processed in the background.",
+                    "Routes are being processed in the background (parsing, locations, and thumbnails).",
                 )
 
             if failed_files:

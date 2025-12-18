@@ -2,7 +2,7 @@
 set -e
 
 echo "Starting django-tasks database worker..."
-uv run --no-sync python manage.py dbworker &
+uv run --no-sync python manage.py db_worker &
 
 echo "Starting Gunicorn..."
 exec uv run --no-sync gunicorn \

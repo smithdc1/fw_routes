@@ -138,6 +138,12 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
 
+# Content Security Policy - Allow images from CDN
+SECURE_CONTENT_SECURITY_POLICY = {
+    "img-src": ["'self'", "https://files.smithdc.uk", "https://s3.us-east-005.backblazeb2.com"],
+    "default-src": ["'self'"],
+}
+
 
 # Use local storage in development, S3 in production
 if DEBUG:
@@ -160,6 +166,7 @@ else:
                 "bucket_name": "FWBucket",
                 "region_name": "us-east-005",
                 "endpoint_url": "https://s3.us-east-005.backblazeb2.com",
+                "custom_domain": "files.smithdc.uk/file/FWBucket",
                 "access_key": "005c5af515dfbda0000000003",
                 "secret_key": os.getenv("BACKBLAZE_KEY"),
                 "querystring_auth": False,

@@ -7,7 +7,7 @@ from django.core.files.base import ContentFile
 from django_tomselect.autocompletes import AutocompleteModelView
 from .models import Route, Tag, StartPoint
 from .forms import RouteUploadForm, BulkUploadForm, TagForm
-from .services import create_route_from_gpx, queue_route_from_gpx
+from .services import create_route_from_gpx
 import hashlib
 from datetime import datetime
 import json
@@ -189,9 +189,8 @@ def bulk_upload(request):
 
             for gpx_file in files:
                 try:
-                    # Queue route for background processing to prevent timeouts
-                    # This defers S3 upload, parsing, geocoding, and thumbnails
-                    queue_route_from_gpx(gpx_file, tag_names=tag_names)
+                    # Use service layer to create route (same logic as single upload)
+                    create_route_from_gpx(gpx_file, tag_names=tag_names)
                     uploaded_count += 1
                 except Exception as e:
                     failed_files.append(f"{gpx_file.name} ({str(e)})")
@@ -200,7 +199,7 @@ def bulk_upload(request):
                 messages.success(
                     request,
                     f"Successfully uploaded {uploaded_count} route(s)! "
-                    "Routes are being processed in the background (parsing, locations, and thumbnails).",
+                    "Locations and thumbnails are being processed in the background.",
                 )
 
             if failed_files:

@@ -101,36 +101,23 @@
         {% endif %}
 
         <!-- Sort -->
-        <form method="get" class="mb-3">
+        <div class="mb-3">
             <div class="row align-items-center">
                 <div class="col-auto">
                     <label class="form-label fw-bold mb-0">Sort by:</label>
                 </div>
                 <div class="col-md-3">
-                    <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()">
-                        <option value="distance_asc" {% if active_sort == 'distance_asc' or not active_sort %}selected{% endif %}>Distance: Low to High</option>
-                        <option value="distance_desc" {% if active_sort == 'distance_desc' %}selected{% endif %}>Distance: High to Low</option>
-                        <option value="elevation_asc" {% if active_sort == 'elevation_asc' %}selected{% endif %}>Elevation: Low to High</option>
-                        <option value="elevation_desc" {% if active_sort == 'elevation_desc' %}selected{% endif %}>Elevation: High to Low</option>
-                        <option value="name_asc" {% if active_sort == 'name_asc' %}selected{% endif %}>Name: A to Z</option>
-                        <option value="name_desc" {% if active_sort == 'name_desc' %}selected{% endif %}>Name: Z to A</option>
+                    <select class="form-select form-select-sm" onchange="window.location.href=this.value">
+                        <option value="{% querystring sort='distance_asc' %}" {% if active_sort == 'distance_asc' or not active_sort %}selected{% endif %}>Distance: Low to High</option>
+                        <option value="{% querystring sort='distance_desc' %}" {% if active_sort == 'distance_desc' %}selected{% endif %}>Distance: High to Low</option>
+                        <option value="{% querystring sort='elevation_asc' %}" {% if active_sort == 'elevation_asc' %}selected{% endif %}>Elevation: Low to High</option>
+                        <option value="{% querystring sort='elevation_desc' %}" {% if active_sort == 'elevation_desc' %}selected{% endif %}>Elevation: High to Low</option>
+                        <option value="{% querystring sort='name_asc' %}" {% if active_sort == 'name_asc' %}selected{% endif %}>Name: A to Z</option>
+                        <option value="{% querystring sort='name_desc' %}" {% if active_sort == 'name_desc' %}selected{% endif %}>Name: Z to A</option>
                     </select>
                 </div>
             </div>
-            <!-- Preserve filter parameters -->
-            {% if active_distance %}
-            <input type="hidden" name="distance" value="{{ active_distance }}">
-            {% endif %}
-            {% if active_start_point %}
-            <input type="hidden" name="start_point" value="{{ active_start_point }}">
-            {% endif %}
-            {% if active_tag %}
-            <input type="hidden" name="tag" value="{{ active_tag }}">
-            {% endif %}
-            {% if search_query %}
-            <input type="hidden" name="search" value="{{ search_query }}">
-            {% endif %}
-        </form>
+        </div>
     </div>
 </div>
 

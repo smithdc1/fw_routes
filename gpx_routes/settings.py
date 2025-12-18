@@ -157,7 +157,7 @@ else:
         "default": {
             "BACKEND": "storages.backends.s3.S3Storage",
             "OPTIONS": {
-                "bucket_name": "BlogBucket",
+                "bucket_name": "FWBucket",
                 "region_name": "us-east-005",
                 "endpoint_url": "https://s3.us-east-005.backblazeb2.com",
                 "access_key": "005c5af515dfbda0000000003",

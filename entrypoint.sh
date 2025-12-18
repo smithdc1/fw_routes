@@ -8,6 +8,7 @@ echo "Starting Gunicorn..."
 exec uv run --no-sync gunicorn \
     --bind 0.0.0.0:8000 \
     --workers 3 \
+    --timeout 300 \
     --access-logfile - \
     --error-logfile - \
     --log-level info \

@@ -90,12 +90,17 @@ def queue_route_from_gpx(gpx_file, name=None, tag_names=None):
         >>> gpx_file = request.FILES['gpx_file']
         >>> queue_route_from_gpx(gpx_file, tag_names=["hiking", "trail"])
     """
-    # Read the file content into memory
+    # Read the file content into memory as bytes
     gpx_file.seek(0)
     file_content = gpx_file.read()
+
+    # Ensure we always have bytes for consistent serialization
+    if isinstance(file_content, str):
+        file_content = file_content.encode('utf-8')
+
     file_name = gpx_file.name
 
-    # Queue background task with file data
+    # Queue background task with file data (always as bytes)
     # This task will handle S3 upload, parsing, and all other processing
     process_route_deferred.enqueue(
         file_content=file_content,

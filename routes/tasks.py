@@ -64,13 +64,13 @@ def process_route_deferred(file_content, file_name, route_name=None, tag_names=N
     This prevents timeouts during bulk uploads by deferring all slow operations.
 
     Args:
-        file_content: Raw bytes of the GPX file
+        file_content: Raw bytes of the GPX file (guaranteed to be bytes)
         file_name: Original filename
         route_name: Optional route name
         tag_names: Optional list of tag names
     """
     try:
-        # 1. Parse GPX file from bytes (convert to text mode for gpxpy)
+        # 1. Parse GPX file from bytes
         gpx_text = file_content.decode('utf-8')
         gpx_file_obj = io.StringIO(gpx_text)
         gpx_data = parse_gpx(gpx_file_obj)
@@ -88,7 +88,6 @@ def process_route_deferred(file_content, file_name, route_name=None, tag_names=N
         )
 
         # 3. Save GPX file to S3 storage (this is the slow operation we're deferring)
-        gpx_file_obj.seek(0)
         route.gpx_file.save(file_name, ContentFile(file_content), save=False)
 
         # 4. Save route to database

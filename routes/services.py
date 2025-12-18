@@ -8,27 +8,26 @@ and improve maintainability.
 from django.core.files.base import ContentFile
 from .models import Route, Tag
 from .utils import parse_gpx
-from .tasks import process_route_async
+from .tasks import process_route_async, process_route_deferred
 
 
-def create_route_from_gpx(gpx_file, name=None, tag_names=None, defer_parsing=False):
+def create_route_from_gpx(gpx_file, name=None, tag_names=None):
     """
-    Create a Route object from a GPX file.
+    Create a Route object from a GPX file (for single uploads).
 
-    This function handles all the common logic for creating a route from a GPX file,
-    including parsing, saving the file, adding tags, and queuing background processing.
+    This function parses the GPX immediately and saves the file to storage,
+    then queues background processing for geocoding and thumbnails.
 
     Args:
         gpx_file: UploadedFile object containing GPX data
         name: Optional route name (uses GPX metadata or filename if not provided)
         tag_names: Optional list/iterable of tag names to attach to the route
-        defer_parsing: If True, skip parsing and defer to background task (for bulk uploads)
 
     Returns:
         Route object (saved to database)
 
     Raises:
-        ValueError: If GPX parsing fails (when defer_parsing=False)
+        ValueError: If GPX parsing fails
         Exception: If route creation fails for any other reason
 
     Example:
@@ -36,27 +35,20 @@ def create_route_from_gpx(gpx_file, name=None, tag_names=None, defer_parsing=Fal
         >>> gpx_file = request.FILES['gpx_file']
         >>> route = create_route_from_gpx(gpx_file, name="My Route", tag_names=["hiking", "trail"])
     """
-    if defer_parsing:
-        # For bulk uploads: create route with minimal info and defer parsing to background
-        route = Route(
-            name=name or gpx_file.name.replace(".gpx", ""),
-            # All other fields have defaults or are nullable
-        )
-    else:
-        # For single uploads: parse GPX file immediately to extract route data
-        gpx_data = parse_gpx(gpx_file)
+    # Parse GPX file immediately to extract route data
+    gpx_data = parse_gpx(gpx_file)
 
-        # Create route with parsed data
-        route = Route(
-            name=name or gpx_data["name"] or gpx_file.name.replace(".gpx", ""),
-            distance_km=gpx_data["distance_km"],
-            elevation_gain=gpx_data["elevation_gain"],
-            start_lat=gpx_data["start_lat"],
-            start_lon=gpx_data["start_lon"],
-            end_lat=gpx_data["end_lat"],
-            end_lon=gpx_data["end_lon"],
-            route_coordinates=gpx_data["points"],  # Store coordinates in database
-        )
+    # Create route with parsed data
+    route = Route(
+        name=name or gpx_data["name"] or gpx_file.name.replace(".gpx", ""),
+        distance_km=gpx_data["distance_km"],
+        elevation_gain=gpx_data["elevation_gain"],
+        start_lat=gpx_data["start_lat"],
+        start_lon=gpx_data["start_lon"],
+        end_lat=gpx_data["end_lat"],
+        end_lon=gpx_data["end_lon"],
+        route_coordinates=gpx_data["points"],  # Store coordinates in database
+    )
 
     # Save GPX file to storage
     gpx_file.seek(0)
@@ -74,7 +66,41 @@ def create_route_from_gpx(gpx_file, name=None, tag_names=None, defer_parsing=Fal
                 route.tags.add(tag)
 
     # Queue background task for geocoding and thumbnail generation
-    # (and GPX parsing if deferred)
     process_route_async.enqueue(route.id)
 
     return route
+
+
+def queue_route_from_gpx(gpx_file, name=None, tag_names=None):
+    """
+    Queue a route for deferred processing (for bulk uploads).
+
+    This function reads the file content and queues a background task to handle
+    file upload to S3 and parsing. This prevents timeouts during bulk uploads.
+
+    Args:
+        gpx_file: UploadedFile object containing GPX data
+        name: Optional route name (uses filename if not provided)
+        tag_names: Optional list/iterable of tag names to attach to the route
+
+    Returns:
+        None (processing happens in background)
+
+    Example:
+        >>> gpx_file = request.FILES['gpx_file']
+        >>> queue_route_from_gpx(gpx_file, tag_names=["hiking", "trail"])
+    """
+    # Read the file content into memory
+    gpx_file.seek(0)
+    file_content = gpx_file.read()
+    file_name = gpx_file.name
+
+    # Queue background task with file data
+    # This task will handle S3 upload, parsing, and all other processing
+    process_route_deferred.enqueue(
+        file_content=file_content,
+        file_name=file_name,
+        route_name=name,
+        tag_names=tag_names or []
+    )
+

@@ -100,9 +100,7 @@ class Command(BaseCommand):
                     points = [(p[0], p[1]) for p in route.route_coordinates]
 
                     # Generate the thumbnail
-                    thumbnail_file = generate_static_map_image(
-                        points, width=800, height=200
-                    )
+                    thumbnail_file = generate_static_map_image(points)
 
                     if thumbnail_file:
                         # Delete old thumbnail if it exists

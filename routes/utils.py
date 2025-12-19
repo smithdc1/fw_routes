@@ -94,11 +94,11 @@ def get_location_name(lat, lon):
     return f"{lat:.4f}, {lon:.4f}"
 
 
-def generate_static_map_image(points, width=800, height=200):
+def generate_static_map_image(points, width=500, height=200):
     """
-    Generate a static PNG thumbnail with basemap for list view.
+    Generate a static WebP thumbnail with basemap for list view.
 
-    Uses Playwright to render a folium map to PNG with OpenStreetMap tiles.
+    Uses Playwright to render a folium map to WebP with OpenStreetMap tiles.
     """
     if not points:
         return None
@@ -170,8 +170,8 @@ def generate_static_map_image(points, width=800, height=200):
             # Wait for tiles to load
             time.sleep(2)
 
-            # Take screenshot
-            screenshot_bytes = page.screenshot(type="png", full_page=False)
+            # Take screenshot (WebP for better compression)
+            screenshot_bytes = page.screenshot(type="webp", quality=85, full_page=False)
             browser.close()
 
         # Clean up temp file
@@ -179,7 +179,7 @@ def generate_static_map_image(points, width=800, height=200):
 
         # Check if we got a valid image (tiles loaded)
         if len(screenshot_bytes) > 5000:  # Reasonable minimum size
-            return ContentFile(screenshot_bytes, name="route_preview.png")
+            return ContentFile(screenshot_bytes, name="route_preview.webp")
         else:
             print("Playwright screenshot too small - tiles may not have loaded")
             return None

@@ -37,11 +37,9 @@ def process_route_async(route_id):
 
         # 2. Generate thumbnail image
         if route.route_coordinates and not route.thumbnail_image:
-            thumbnail = generate_static_map_image(
-                route.route_coordinates, width=800, height=200
-            )
+            thumbnail = generate_static_map_image(route.route_coordinates)
             if thumbnail:
-                thumb_filename = f"{hashlib.md5(f'{datetime.now()}{route.name}'.encode()).hexdigest()}.png"
+                thumb_filename = f"{hashlib.md5(f'{datetime.now()}{route.name}'.encode()).hexdigest()}.webp"
                 route.thumbnail_image.save(thumb_filename, thumbnail, save=True)
 
         return f"Successfully processed route {route_id}"

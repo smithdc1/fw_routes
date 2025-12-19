@@ -98,12 +98,14 @@ def generate_static_map_image(points, width=500, height=200):
     """
     Generate a static WebP thumbnail with basemap for list view.
 
-    Uses Playwright to render a folium map to WebP with OpenStreetMap tiles.
+    Uses Playwright to render a folium map to PNG, then converts to WebP for better compression.
     """
     if not points:
         return None
 
     from playwright.sync_api import sync_playwright
+    from PIL import Image
+    import io
     import time
     import tempfile
 
@@ -170,16 +172,22 @@ def generate_static_map_image(points, width=500, height=200):
             # Wait for tiles to load
             time.sleep(2)
 
-            # Take screenshot (WebP for better compression)
-            screenshot_bytes = page.screenshot(type="webp", quality=85, full_page=False)
+            # Take screenshot as PNG (Playwright doesn't support WebP)
+            png_bytes = page.screenshot(type="png", full_page=False)
             browser.close()
 
         # Clean up temp file
         os.unlink(temp_path)
 
         # Check if we got a valid image (tiles loaded)
-        if len(screenshot_bytes) > 5000:  # Reasonable minimum size
-            return ContentFile(screenshot_bytes, name="route_preview.webp")
+        if len(png_bytes) > 5000:  # Reasonable minimum size
+            # Convert PNG to WebP for better compression
+            png_image = Image.open(io.BytesIO(png_bytes))
+            webp_buffer = io.BytesIO()
+            png_image.save(webp_buffer, format="WebP", quality=85)
+            webp_buffer.seek(0)
+
+            return ContentFile(webp_buffer.read(), name="route_preview.webp")
         else:
             print("Playwright screenshot too small - tiles may not have loaded")
             return None

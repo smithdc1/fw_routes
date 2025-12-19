@@ -1,6 +1,8 @@
 from django.core.management.base import BaseCommand
 from routes.models import Route
 from routes.utils import generate_static_map_image
+import hashlib
+from datetime import datetime
 
 
 class Command(BaseCommand):
@@ -107,9 +109,9 @@ class Command(BaseCommand):
                         if route.thumbnail_image:
                             route.thumbnail_image.delete(save=False)
 
-                        # Save new thumbnail
-                        route.thumbnail_image = thumbnail_file
-                        route.save(update_fields=["thumbnail_image"])
+                        # Save new thumbnail with unique filename
+                        thumb_filename = f"{hashlib.md5(f'{datetime.now()}{route.name}'.encode()).hexdigest()}.webp"
+                        route.thumbnail_image.save(thumb_filename, thumbnail_file, save=True)
 
                         success_count += 1
                         self.stdout.write(

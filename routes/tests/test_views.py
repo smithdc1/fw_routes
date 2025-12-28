@@ -368,6 +368,30 @@ class RouteDetailViewTest(TestCase):
                 any("tags: Invalid tag data" in str(m) for m in messages_list)
             )
 
+    def test_update_tags_with_empty_errors(self):
+        """Test update tags when form is invalid but has no error messages."""
+        from unittest.mock import patch
+
+        route = Route.objects.create(
+            name="Test Route", route_coordinates=[[52.4603, -2.1638]]
+        )
+
+        # Mock TagForm to simulate invalid form with no specific errors
+        with patch("routes.views.TagForm") as MockForm:
+            mock_form = MockForm.return_value
+            mock_form.is_valid.return_value = False
+            mock_form.errors = {}  # Empty errors dict
+
+            response = self.client.post(
+                reverse("route_detail", kwargs={"pk": route.pk}),
+                {"action": "update_tags", "tags": "test"},
+                follow=True,
+            )
+
+            # Should show generic error message
+            messages_list = list(response.context["messages"])
+            self.assertTrue(any("Error updating tags" in str(m) for m in messages_list))
+
 
 class RouteShareViewTest(TestCase):
     """Tests for the route_share view (public access)."""
@@ -475,6 +499,25 @@ class RouteUploadViewTest(TestCase):
 
         messages = list(response.context["messages"])
         self.assertTrue(any("Error processing GPX" in str(m) for m in messages))
+
+    @patch("routes.views.create_route_from_gpx")
+    def test_post_unexpected_exception(self, mock_create):
+        """Test that unexpected exceptions are handled gracefully."""
+        mock_create.side_effect = RuntimeError("Unexpected database error")
+
+        path = get_fixture_path("sample_track.gpx")
+        with open(path, "rb") as f:
+            gpx_file = SimpleUploadedFile(
+                "sample_track.gpx", f.read(), content_type="application/gpx+xml"
+            )
+
+        response = self.client.post(
+            reverse("route_upload"), {"name": "Test", "gpx_file": gpx_file}, follow=True
+        )
+
+        # Should show generic error message
+        messages = list(response.context["messages"])
+        self.assertTrue(any("Unexpected error" in str(m) for m in messages))
 
 
 class BulkUploadViewTest(TestCase):
@@ -627,6 +670,34 @@ class TagAutocompleteViewTest(TestCase):
             self.assertEqual(response.status_code, 200)
             data = response.json()
             self.assertEqual(data["results"], [])
+
+    def test_create_object_exception_handling(self):
+        """Test create_object handles exceptions when creating tags."""
+        from unittest.mock import patch
+
+        from routes.views import TagAutocompleteView
+
+        view = TagAutocompleteView()
+
+        # Mock Tag.objects.get_or_create to raise an exception
+        with patch("routes.models.Tag.objects.get_or_create") as mock_create:
+            mock_create.side_effect = Exception("Database error")
+            with self.assertRaises(Exception):
+                view.create_object("New Tag")
+
+    def test_get_list_url(self):
+        """Test that get_list_url returns empty string."""
+        from routes.views import TagAutocompleteView
+
+        view = TagAutocompleteView()
+        self.assertEqual(view.get_list_url(), "")
+
+    def test_get_create_url(self):
+        """Test that get_create_url returns empty string."""
+        from routes.views import TagAutocompleteView
+
+        view = TagAutocompleteView()
+        self.assertEqual(view.get_create_url(), "")
 
 
 class FaviconViewTest(TestCase):

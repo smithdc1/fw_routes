@@ -370,7 +370,7 @@ class RouteUploadViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "form")
 
-    @patch("routes.services.create_route_from_gpx")
+    @patch("routes.views.create_route_from_gpx")
     def test_post_valid_gpx_with_name_and_tags(self, mock_create):
         """Test uploading valid GPX with name and tags."""
         # Mock the route creation
@@ -395,7 +395,7 @@ class RouteUploadViewTest(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(mock_create.called)
 
-    @patch("routes.services.create_route_from_gpx")
+    @patch("routes.views.create_route_from_gpx")
     def test_post_valid_gpx_without_name(self, mock_create):
         """Test uploading GPX without name uses filename."""
         mock_route = Route.objects.create(name="sample_track", distance_km=10)
@@ -414,7 +414,7 @@ class RouteUploadViewTest(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(mock_create.called)
 
-    @patch("routes.services.create_route_from_gpx")
+    @patch("routes.views.create_route_from_gpx")
     def test_post_invalid_gpx(self, mock_create):
         """Test uploading invalid GPX shows error."""
         mock_create.side_effect = ValueError("Invalid GPX file")
@@ -450,7 +450,7 @@ class BulkUploadViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "form")
 
-    @patch("routes.services.create_route_from_gpx")
+    @patch("routes.views.create_route_from_gpx")
     def test_post_multiple_valid_files(self, mock_create):
         """Test bulk uploading multiple valid GPX files."""
         mock_create.return_value = Route.objects.create(name="Test", distance_km=10)
@@ -474,7 +474,7 @@ class BulkUploadViewTest(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(mock_create.call_count, 2)
 
-    @patch("routes.services.create_route_from_gpx")
+    @patch("routes.views.create_route_from_gpx")
     def test_partial_failure(self, mock_create):
         """Test bulk upload with some files failing."""
         # First call succeeds, second fails

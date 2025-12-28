@@ -215,7 +215,7 @@ class FilteringAndSearchWorkflowTest(TestCase):
         self.tag2 = Tag.objects.create(name="Biking")
 
         self.route1 = Route.objects.create(
-            name="Mountain Hike", distance_km=16, start_location="Location A"
+            name="Mountain Hike", distance_km=40, start_location="Location A"
         )
         self.route1.tags.add(self.tag1)
 

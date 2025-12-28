@@ -25,14 +25,18 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: uv sync --dev
+        run: uv sync --all-extras
+
+      - name: Create staticfiles directory
+        run: mkdir -p staticfiles/favicon
 
       - name: Run tests with coverage
         run: |
-          uv run coverage run --source='routes' manage.py test routes --settings=gpx_routes.settings_test
+          uv run coverage run --source='routes' manage.py test routes --settings=gpx_routes.settings_test --verbosity=2
         env:
           SECRET_KEY: "test-secret-key-for-ci"
           DEBUG: "False"
+          PYTHONUNBUFFERED: "1"
 
       - name: Generate coverage report
         run: uv run coverage report --fail-under=85

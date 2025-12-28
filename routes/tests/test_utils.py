@@ -195,10 +195,15 @@ class GenerateStaticMapImageTest(TestCase):
 
         self.assertIsNone(result)
 
+    @patch("PIL.Image.open")
     @patch("routes.utils.os.unlink")
-    @patch("routes.utils.sync_playwright")
-    def test_successful_thumbnail_generation(self, mock_playwright, mock_unlink):
+    @patch("playwright.sync_api.sync_playwright")
+    def test_successful_thumbnail_generation(self, mock_playwright, mock_unlink, mock_image_open):
         """Test successful thumbnail generation."""
+        # Mock PIL Image
+        mock_image = MagicMock()
+        mock_image_open.return_value = mock_image
+
         # Mock Playwright
         mock_browser = MagicMock()
         mock_page = MagicMock()
@@ -216,7 +221,7 @@ class GenerateStaticMapImageTest(TestCase):
         self.assertTrue(hasattr(result, "read"))
 
     @patch("routes.utils.os.unlink")
-    @patch("routes.utils.sync_playwright")
+    @patch("playwright.sync_api.sync_playwright")
     def test_thumbnail_too_small_returns_none(self, mock_playwright, mock_unlink):
         """Test that too-small screenshots return None."""
         mock_browser = MagicMock()
@@ -233,7 +238,7 @@ class GenerateStaticMapImageTest(TestCase):
         self.assertIsNone(result)
 
     @patch("routes.utils.os.unlink")
-    @patch("routes.utils.sync_playwright")
+    @patch("playwright.sync_api.sync_playwright")
     def test_playwright_error_returns_none(self, mock_playwright, mock_unlink):
         """Test that Playwright errors return None."""
         mock_playwright.side_effect = Exception("Playwright failed")

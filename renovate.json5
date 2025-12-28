@@ -1,0 +1,26 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  // Enable uv support
+  "python": {
+    "lockFileMaintenance": {
+      "enabled": true,
+      "schedule": ["before 3am on Monday"]
+    }
+  },
+  // Automatically detect and update uv.lock
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": false
+  },
+  // Group Python dependency updates
+  "packageRules": [
+    {
+      "matchManagers": ["uv"],
+      "groupName": "Python dependencies",
+      "schedule": ["before 3am on Monday"]
+    }
+  ]
+}

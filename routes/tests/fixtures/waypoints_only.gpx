@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Test">
+  <wpt lat="52.4603" lon="-2.1638">
+    <name>Waypoint 1</name>
+  </wpt>
+  <wpt lat="52.4613" lon="-2.1628">
+    <name>Waypoint 2</name>
+  </wpt>
+</gpx>

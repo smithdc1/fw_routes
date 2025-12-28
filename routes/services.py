@@ -61,7 +61,9 @@ def create_route_from_gpx(gpx_file, name=None, tag_names=None):
         for tag_name in tag_names:
             tag_name = tag_name.strip()
             if tag_name:
-                tag, _ = Tag.objects.get_or_create(name=tag_name)
+                # Normalize tag name to match Tag model's save() behavior
+                normalized_name = Tag.normalize_name(tag_name)
+                tag, _ = Tag.objects.get_or_create(name=normalized_name)
                 route.tags.add(tag)
 
     # Queue background task for geocoding and thumbnail generation

@@ -2,9 +2,10 @@
 Tests for routes models.
 """
 
-from django.test import TestCase
 from django.db import IntegrityError
-from routes.models import Tag, StartPoint, Route
+from django.test import TestCase
+
+from routes.models import Route, StartPoint, Tag
 
 
 class TagModelTest(TestCase):
@@ -219,11 +220,11 @@ class RouteModelTest(TestCase):
         """Test that routes are ordered by -uploaded_at."""
         import time
 
-        route1 = Route.objects.create(name="Route 1")
+        Route.objects.create(name="Route 1")
         time.sleep(0.01)  # Small delay to ensure different timestamps
-        route2 = Route.objects.create(name="Route 2")
+        Route.objects.create(name="Route 2")
         time.sleep(0.01)
-        route3 = Route.objects.create(name="Route 3")
+        Route.objects.create(name="Route 3")
 
         routes = list(Route.objects.all())
         self.assertEqual(routes[0].name, "Route 3")

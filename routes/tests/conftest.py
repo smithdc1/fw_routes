@@ -2,11 +2,11 @@
 Pytest fixtures and configuration for route tests.
 """
 
-import os
 from pathlib import Path
+
+import pytest
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
-import pytest
 
 
 @pytest.fixture

@@ -7,7 +7,7 @@ Use these settings when running tests to:
 - Speed up tests
 """
 
-from .settings import *
+from .settings import *  # noqa: F403
 
 # Use in-memory SQLite for speed
 DATABASES = {

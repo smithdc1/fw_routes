@@ -2,12 +2,14 @@
 Tests for routes service layer.
 """
 
-from django.test import TestCase
-from django.core.files.uploadedfile import SimpleUploadedFile
-from unittest.mock import patch, MagicMock
-from routes.services import create_route_from_gpx
-from routes.models import Route, Tag
 from pathlib import Path
+from unittest.mock import patch
+
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import TestCase
+
+from routes.models import Tag
+from routes.services import create_route_from_gpx
 
 
 def get_fixture_path(filename):

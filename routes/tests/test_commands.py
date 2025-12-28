@@ -2,11 +2,13 @@
 Tests for management commands.
 """
 
-from django.test import TestCase
-from django.core.management import call_command
-from django.core.files.base import ContentFile
-from unittest.mock import patch, MagicMock
 from io import StringIO
+from unittest.mock import patch
+
+from django.core.files.base import ContentFile
+from django.core.management import call_command
+from django.test import TestCase
+
 from routes.models import Route, StartPoint
 
 
@@ -23,9 +25,7 @@ class RegenerateThumbnailsCommandTest(TestCase):
         route1.thumbnail_image.save("old.webp", ContentFile(b"old"), save=True)
 
         # Route without thumbnail
-        route2 = Route.objects.create(
-            name="Route 2", route_coordinates=[[52.4603, -2.1638]]
-        )
+        Route.objects.create(name="Route 2", route_coordinates=[[52.4603, -2.1638]])
 
         mock_generate.return_value = ContentFile(b"new image", name="new.webp")
 
@@ -38,12 +38,8 @@ class RegenerateThumbnailsCommandTest(TestCase):
     @patch("routes.management.commands.regenerate_thumbnails.generate_static_map_image")
     def test_all_flag(self, mock_generate):
         """Test --all flag regenerates all routes."""
-        route1 = Route.objects.create(
-            name="Route 1", route_coordinates=[[52.4603, -2.1638]]
-        )
-        route2 = Route.objects.create(
-            name="Route 2", route_coordinates=[[52.4613, -2.1628]]
-        )
+        Route.objects.create(name="Route 1", route_coordinates=[[52.4603, -2.1638]])
+        Route.objects.create(name="Route 2", route_coordinates=[[52.4613, -2.1628]])
 
         mock_generate.return_value = ContentFile(b"new image", name="new.webp")
 
@@ -61,9 +57,7 @@ class RegenerateThumbnailsCommandTest(TestCase):
         )
         route1.thumbnail_image.save("old.webp", ContentFile(b"old"), save=True)
 
-        route2 = Route.objects.create(
-            name="Route 2", route_coordinates=[[52.4613, -2.1628]]
-        )
+        Route.objects.create(name="Route 2", route_coordinates=[[52.4613, -2.1628]])
 
         mock_generate.return_value = ContentFile(b"new image", name="new.webp")
 
@@ -99,9 +93,7 @@ class RegenerateThumbnailsCommandTest(TestCase):
         )
         route1.thumbnail_image.save("old.webp", ContentFile(b"old"), save=True)
 
-        route2 = Route.objects.create(
-            name="Route 2", route_coordinates=[[52.4613, -2.1628]]
-        )
+        Route.objects.create(name="Route 2", route_coordinates=[[52.4613, -2.1628]])
 
         mock_generate.return_value = ContentFile(b"new image", name="new.webp")
 
@@ -122,7 +114,7 @@ class RegenerateThumbnailsCommandTest(TestCase):
     @patch("routes.management.commands.regenerate_thumbnails.generate_static_map_image")
     def test_skip_routes_without_coordinates(self, mock_generate):
         """Test that routes without coordinates are skipped."""
-        route = Route.objects.create(name="No Coords", route_coordinates=[])
+        Route.objects.create(name="No Coords", route_coordinates=[])
 
         out = StringIO()
         call_command("regenerate_thumbnails", "--all", stdout=out)
@@ -133,9 +125,7 @@ class RegenerateThumbnailsCommandTest(TestCase):
     @patch("routes.management.commands.regenerate_thumbnails.generate_static_map_image")
     def test_error_handling(self, mock_generate):
         """Test error handling when thumbnail generation fails."""
-        route = Route.objects.create(
-            name="Route 1", route_coordinates=[[52.4603, -2.1638]]
-        )
+        Route.objects.create(name="Route 1", route_coordinates=[[52.4603, -2.1638]])
 
         # Simulate generation failure
         mock_generate.side_effect = Exception("Generation failed")
@@ -149,12 +139,8 @@ class RegenerateThumbnailsCommandTest(TestCase):
     @patch("routes.management.commands.regenerate_thumbnails.generate_static_map_image")
     def test_summary_output(self, mock_generate):
         """Test that command outputs summary."""
-        route1 = Route.objects.create(
-            name="Route 1", route_coordinates=[[52.4603, -2.1638]]
-        )
-        route2 = Route.objects.create(
-            name="Route 2", route_coordinates=[[52.4613, -2.1628]]
-        )
+        Route.objects.create(name="Route 1", route_coordinates=[[52.4603, -2.1638]])
+        Route.objects.create(name="Route 2", route_coordinates=[[52.4613, -2.1628]])
 
         mock_generate.return_value = ContentFile(b"new image", name="new.webp")
 
@@ -178,7 +164,7 @@ class UpdateStartLocationsCommandTest(TestCase):
             start_lon=-2.1638,
             start_location="",  # Empty location
         )
-        route2 = Route.objects.create(
+        Route.objects.create(
             name="Route 2",
             start_lat=52.4613,
             start_lon=-2.1628,
@@ -202,10 +188,10 @@ class UpdateStartLocationsCommandTest(TestCase):
     @patch("routes.management.commands.update_start_locations.find_closest_start_point")
     def test_all_flag(self, mock_find):
         """Test --all flag processes all routes."""
-        route1 = Route.objects.create(
+        Route.objects.create(
             name="Route 1", start_lat=52.4603, start_lon=-2.1638, start_location=""
         )
-        route2 = Route.objects.create(
+        Route.objects.create(
             name="Route 2",
             start_lat=52.4613,
             start_lon=-2.1628,
@@ -270,7 +256,7 @@ class UpdateStartLocationsCommandTest(TestCase):
     @patch("routes.management.commands.update_start_locations.find_closest_start_point")
     def test_skip_routes_without_coordinates(self, mock_find):
         """Test that routes without coordinates are skipped."""
-        route = Route.objects.create(
+        Route.objects.create(
             name="No Coords", start_lat=None, start_lon=None, start_location=""
         )
 
@@ -286,13 +272,13 @@ class UpdateStartLocationsCommandTest(TestCase):
     @patch("routes.management.commands.update_start_locations.find_closest_start_point")
     def test_coordinate_string_detection(self, mock_find):
         """Test detection of coordinate strings vs proper location names."""
-        route1 = Route.objects.create(
+        Route.objects.create(
             name="Route 1",
             start_lat=52.4603,
             start_lon=-2.1638,
             start_location="52.4603, -2.1638",  # Coordinate string
         )
-        route2 = Route.objects.create(
+        Route.objects.create(
             name="Route 2",
             start_lat=52.4613,
             start_lon=-2.1628,
@@ -313,10 +299,10 @@ class UpdateStartLocationsCommandTest(TestCase):
     @patch("routes.management.commands.update_start_locations.find_closest_start_point")
     def test_summary_output(self, mock_find):
         """Test that command outputs summary."""
-        route1 = Route.objects.create(
+        Route.objects.create(
             name="Route 1", start_lat=52.4603, start_lon=-2.1638, start_location=""
         )
-        route2 = Route.objects.create(
+        Route.objects.create(
             name="Route 2", start_lat=52.4613, start_lon=-2.1628, start_location=""
         )
 
@@ -335,7 +321,7 @@ class UpdateStartLocationsCommandTest(TestCase):
     @patch("routes.management.commands.update_start_locations.find_closest_start_point")
     def test_error_handling(self, mock_find):
         """Test error handling when processing fails."""
-        route = Route.objects.create(
+        Route.objects.create(
             name="Route 1", start_lat=52.4603, start_lon=-2.1638, start_location=""
         )
 

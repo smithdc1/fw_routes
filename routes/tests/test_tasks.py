@@ -1,14 +1,16 @@
 """
 Tests for routes async tasks.
 
-Note: These tests use the immediate backend for django-tasks (configured in settings_test.py)
-so tasks run synchronously during tests. We call the task function directly.
+Note: These tests use the immediate backend for django-tasks
+(configured in settings_test.py) so tasks run synchronously during tests.
 """
 
-from django.test import TestCase
-from unittest.mock import patch, MagicMock
-from routes.models import Route, StartPoint
+from unittest.mock import patch
+
 from django.core.files.base import ContentFile
+from django.test import TestCase
+
+from routes.models import Route, StartPoint
 
 # Import the task function directly to test its logic
 from routes.tasks import process_route_async

@@ -2,13 +2,15 @@
 Tests for routes views.
 """
 
-from django.test import TestCase, Client
-from django.urls import reverse
+from pathlib import Path
+from unittest.mock import patch
+
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
-from unittest.mock import patch, MagicMock
-from routes.models import Route, Tag, StartPoint
-from pathlib import Path
+from django.test import Client, TestCase
+from django.urls import reverse
+
+from routes.models import Route, Tag
 
 
 def get_fixture_path(filename):
@@ -89,7 +91,7 @@ class RouteListViewTest(TestCase):
         tag = Tag.objects.create(name="Hiking")
         route1 = Route.objects.create(name="Hiking Route", distance_km=10)
         route1.tags.add(tag)
-        route2 = Route.objects.create(name="Other Route", distance_km=20)
+        Route.objects.create(name="Other Route", distance_km=20)
 
         response = self.client.get(reverse("route_list") + f"?tag={tag.name}")
 
@@ -99,10 +101,10 @@ class RouteListViewTest(TestCase):
 
     def test_filter_by_start_point(self):
         """Test filtering routes by start point."""
-        route1 = Route.objects.create(
+        Route.objects.create(
             name="Route 1", distance_km=10, start_location="Location A"
         )
-        route2 = Route.objects.create(
+        Route.objects.create(
             name="Route 2", distance_km=20, start_location="Location B"
         )
 
@@ -220,8 +222,7 @@ class RouteListViewTest(TestCase):
         Route.objects.create(name="Beach Walk", distance_km=16)
 
         response = self.client.get(
-            reverse("route_list")
-            + f"?tag={tag.name}&distance=short&search=Mountain"
+            reverse("route_list") + f"?tag={tag.name}&distance=short&search=Mountain"
         )
 
         self.assertEqual(response.status_code, 200)
@@ -518,9 +519,7 @@ class RouteDeleteViewTest(TestCase):
         """Test POST request deletes the route."""
         route = Route.objects.create(name="To Delete")
 
-        response = self.client.post(
-            reverse("route_delete", kwargs={"pk": route.pk})
-        )
+        response = self.client.post(reverse("route_delete", kwargs={"pk": route.pk}))
 
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Route.objects.filter(pk=route.pk).exists())

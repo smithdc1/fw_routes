@@ -2,12 +2,12 @@
 Tests for admin configuration.
 """
 
-from django.test import TestCase, Client
-from django.contrib.auth.models import User
-from django.urls import reverse
-from routes.models import Route, Tag, StartPoint
-from routes.admin import RouteAdmin, TagAdmin, StartPointAdmin
 from django.contrib import admin
+from django.contrib.auth.models import User
+from django.test import Client, TestCase
+
+from routes.admin import RouteAdmin, StartPointAdmin, TagAdmin
+from routes.models import Route, StartPoint, Tag
 
 
 class AdminRegistrationTest(TestCase):

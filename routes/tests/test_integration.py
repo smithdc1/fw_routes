@@ -2,14 +2,16 @@
 Integration tests for complete user workflows.
 """
 
-from django.test import TestCase, Client
-from django.contrib.auth.models import User
-from django.urls import reverse
-from unittest.mock import patch, MagicMock
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.files.base import ContentFile
-from routes.models import Route, Tag, StartPoint
 from pathlib import Path
+from unittest.mock import patch
+
+from django.contrib.auth.models import User
+from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import Client, TestCase
+from django.urls import reverse
+
+from routes.models import Route, StartPoint, Tag
 
 
 def get_fixture_path(filename):
@@ -232,8 +234,7 @@ class FilteringAndSearchWorkflowTest(TestCase):
     def test_combined_filters(self):
         """Test combining tag, distance, and location filters."""
         response = self.client.get(
-            reverse("route_list")
-            + "?tag=Hiking&distance=short&start_point=Location A"
+            reverse("route_list") + "?tag=Hiking&distance=short&start_point=Location A"
         )
 
         self.assertEqual(response.status_code, 200)
@@ -245,9 +246,7 @@ class FilteringAndSearchWorkflowTest(TestCase):
 
     def test_search_with_filters(self):
         """Test search combined with other filters."""
-        response = self.client.get(
-            reverse("route_list") + "?search=Hike&tag=Hiking"
-        )
+        response = self.client.get(reverse("route_list") + "?search=Hike&tag=Hiking")
 
         routes = list(response.context["routes"])
         self.assertEqual(len(routes), 2)

@@ -59,8 +59,8 @@ def parse_gpx(gpx_file):
         # GPXRoute uses length() instead of length_3d()
         length = route.length() or route.length_2d() or 0
         data["distance_km"] += length / 1000 if length else 0
-        # Routes don't have get_uphill_downhill() - calculate from points if elevation data exists
-        if hasattr(route, 'get_uphill_downhill'):
+        # Routes don't have get_uphill_downhill() method available
+        if hasattr(route, "get_uphill_downhill"):
             uphill, downhill = route.get_uphill_downhill()
             data["elevation_gain"] += uphill if uphill else 0
 

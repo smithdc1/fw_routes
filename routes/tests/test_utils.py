@@ -2,19 +2,21 @@
 Tests for routes utility functions.
 """
 
-from django.test import TestCase
+import json
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
 from django.core.files.uploadedfile import SimpleUploadedFile
-from unittest.mock import patch, MagicMock, mock_open
+from django.test import TestCase
+
+from routes.models import StartPoint
 from routes.utils import (
-    parse_gpx,
-    get_location_name,
-    generate_static_map_image,
     calculate_distance_meters,
     find_closest_start_point,
+    generate_static_map_image,
+    get_location_name,
+    parse_gpx,
 )
-from routes.models import StartPoint
-from pathlib import Path
-import json
 
 
 def get_fixture_path(filename):
@@ -198,7 +200,9 @@ class GenerateStaticMapImageTest(TestCase):
     @patch("PIL.Image.open")
     @patch("routes.utils.os.unlink")
     @patch("playwright.sync_api.sync_playwright")
-    def test_successful_thumbnail_generation(self, mock_playwright, mock_unlink, mock_image_open):
+    def test_successful_thumbnail_generation(
+        self, mock_playwright, mock_unlink, mock_image_open
+    ):
         """Test successful thumbnail generation."""
         # Mock PIL Image
         mock_image = MagicMock()
@@ -310,9 +314,7 @@ class FindClosestStartPointTest(TestCase):
 
     def test_no_point_within_distance(self):
         """Test when no start point is within max distance."""
-        StartPoint.objects.create(
-            name="Far Point", latitude=52.4603, longitude=-2.1638
-        )
+        StartPoint.objects.create(name="Far Point", latitude=52.4603, longitude=-2.1638)
 
         # Far away point (>250m)
         result = find_closest_start_point(52.5000, -2.2000, max_distance_meters=250)
@@ -321,13 +323,11 @@ class FindClosestStartPointTest(TestCase):
 
     def test_find_closest_among_multiple(self):
         """Test finding the closest point among multiple options."""
-        sp1 = StartPoint.objects.create(
-            name="Far Point", latitude=52.4600, longitude=-2.1600
-        )
+        StartPoint.objects.create(name="Far Point", latitude=52.4600, longitude=-2.1600)
         sp2 = StartPoint.objects.create(
             name="Close Point", latitude=52.4605, longitude=-2.1640
         )
-        sp3 = StartPoint.objects.create(
+        StartPoint.objects.create(
             name="Medium Point", latitude=52.4610, longitude=-2.1650
         )
 

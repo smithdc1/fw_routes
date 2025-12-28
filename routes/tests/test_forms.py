@@ -2,18 +2,20 @@
 Tests for routes forms and validators.
 """
 
-from django.test import TestCase
+from pathlib import Path
+
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import TestCase
+
 from routes.forms import (
-    validate_gpx_file,
-    RouteUploadForm,
     BulkUploadForm,
-    TagForm,
+    RouteUploadForm,
     TagCreationField,
+    TagForm,
+    validate_gpx_file,
 )
 from routes.models import Tag
-from pathlib import Path
 
 
 def get_fixture_path(filename):

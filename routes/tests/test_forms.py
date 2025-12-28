@@ -219,6 +219,22 @@ class BulkUploadFormTest(TestCase):
 
             self.assertFalse(form.is_valid())
 
+    def test_single_file_upload(self):
+        """Test bulk upload with single file (not in list)."""
+        path = get_fixture_path("sample_track.gpx")
+        with open(path, "rb") as f:
+            gpx_file = SimpleUploadedFile(
+                "track.gpx", f.read(), content_type="application/gpx+xml"
+            )
+
+            # Pass single file directly (triggers else branch in clean method)
+            form = BulkUploadForm(
+                data={"default_tags": "test"}, files={"gpx_files": gpx_file}
+            )
+
+            self.assertTrue(form.is_valid(), form.errors)
+            self.assertEqual(len(form.cleaned_data["gpx_files"]), 1)
+
 
 class TagFormTest(TestCase):
     """Tests for the TagForm."""

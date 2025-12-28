@@ -28,6 +28,28 @@ dev = [
     "pytest-django",
     "ruff",
     "mypy",
+    "coverage>=7.0.0",
+]
+
+[tool.coverage.run]
+source = ["routes"]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__init__.py",
+    "*/apps.py",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+fail_under = 85
+
+[dependency-groups]
+dev = [
+    "coverage>=7.13.0",
 ]
 
 [tool.ruff.lint]

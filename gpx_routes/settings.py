@@ -14,7 +14,7 @@ import os
 from pathlib import Path
 
 import dj_database_url
-from django.middleware.security import csp
+from django.utils.csp import CSP
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -145,11 +145,11 @@ MEDIA_URL = "/media/"
 # Content Security Policy - Allow images from CDN
 SECURE_CONTENT_SECURITY_POLICY = {
     "img-src": [
-        csp.SELF,
+        CSP.SELF,
         "https://files.smithdc.uk",
         "https://s3.us-east-005.backblazeb2.com",
     ],
-    "default-src": [csp.SELF],
+    "default-src": [CSP.SELF],
 }
 
 

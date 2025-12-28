@@ -1,10 +1,11 @@
-import gpxpy
-import folium
-from django.core.files.base import ContentFile
-import os
-from urllib.request import Request, urlopen
-from urllib.error import URLError
 import json
+import os
+from urllib.error import URLError
+from urllib.request import Request, urlopen
+
+import folium
+import gpxpy
+from django.core.files.base import ContentFile
 
 
 def parse_gpx(gpx_file):
@@ -98,16 +99,18 @@ def generate_static_map_image(points, width=500, height=200):
     """
     Generate a static WebP thumbnail with basemap for list view.
 
-    Uses Playwright to render a folium map to PNG, then converts to WebP for better compression.
+    Uses Playwright to render a folium map to PNG, then converts to WebP
+    for better compression.
     """
     if not points:
         return None
 
-    from playwright.sync_api import sync_playwright
-    from PIL import Image
     import io
-    import time
     import tempfile
+    import time
+
+    from PIL import Image
+    from playwright.sync_api import sync_playwright
 
     # Calculate bounds of the route
     lats = [p[0] for p in points]
@@ -204,7 +207,7 @@ def calculate_distance_meters(lat1, lon1, lat2, lon2):
     Calculate distance between two coordinates using Haversine formula.
     Returns distance in meters.
     """
-    from math import radians, sin, cos, sqrt, atan2
+    from math import atan2, cos, radians, sin, sqrt
 
     R = 6371000  # Earth radius in meters
 

@@ -1,8 +1,10 @@
-from django.core.management.base import BaseCommand
-from routes.models import Route
-from routes.utils import generate_static_map_image
 import hashlib
 from datetime import datetime
+
+from django.core.management.base import BaseCommand
+
+from routes.models import Route
+from routes.utils import generate_static_map_image
 
 
 class Command(BaseCommand):
@@ -12,7 +14,10 @@ class Command(BaseCommand):
         parser.add_argument(
             "--all",
             action="store_true",
-            help="Regenerate all route thumbnails (default: only routes with existing thumbnails)",
+            help=(
+                "Regenerate all route thumbnails "
+                "(default: only routes with existing thumbnails)"
+            ),
         )
         parser.add_argument(
             "--force",
@@ -110,8 +115,12 @@ class Command(BaseCommand):
                             route.thumbnail_image.delete(save=False)
 
                         # Save new thumbnail with unique filename
-                        thumb_filename = f"{hashlib.md5(f'{datetime.now()}{route.name}'.encode()).hexdigest()}.webp"
-                        route.thumbnail_image.save(thumb_filename, thumbnail_file, save=True)
+                        hash_input = f"{datetime.now()}{route.name}".encode()
+                        thumb_hash = hashlib.md5(hash_input).hexdigest()
+                        thumb_filename = f"{thumb_hash}.webp"
+                        route.thumbnail_image.save(
+                            thumb_filename, thumbnail_file, save=True
+                        )
 
                         success_count += 1
                         self.stdout.write(
@@ -149,7 +158,7 @@ class Command(BaseCommand):
         self.stdout.write("\n" + "=" * 60)
         if dry_run:
             self.stdout.write(self.style.WARNING("DRY RUN - No changes were made"))
-        self.stdout.write(self.style.SUCCESS(f"\nSummary:"))
+        self.stdout.write(self.style.SUCCESS("\nSummary:"))
         self.stdout.write(f"  Successfully regenerated: {success_count}")
         self.stdout.write(f"  Skipped: {skipped_count}")
         if error_count > 0:

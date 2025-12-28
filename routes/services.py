@@ -5,10 +5,9 @@ This module contains business logic extracted from views to avoid code duplicati
 and improve maintainability.
 """
 
-from django.core.files.base import ContentFile
 from .models import Route, Tag
-from .utils import parse_gpx
 from .tasks import process_route_async
+from .utils import parse_gpx
 
 
 def create_route_from_gpx(gpx_file, name=None, tag_names=None):
@@ -33,7 +32,9 @@ def create_route_from_gpx(gpx_file, name=None, tag_names=None):
     Example:
         >>> from django.core.files.uploadedfile import SimpleUploadedFile
         >>> gpx_file = request.FILES['gpx_file']
-        >>> route = create_route_from_gpx(gpx_file, name="My Route", tag_names=["hiking", "trail"])
+        >>> route = create_route_from_gpx(
+        ...     gpx_file, name="My Route", tag_names=["hiking", "trail"]
+        ... )
     """
     # Parse GPX file immediately to extract route data
     gpx_data = parse_gpx(gpx_file)
@@ -68,4 +69,3 @@ def create_route_from_gpx(gpx_file, name=None, tag_names=None):
     process_route_async.enqueue(route.id)
 
     return route
-

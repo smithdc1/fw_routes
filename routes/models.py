@@ -1,7 +1,8 @@
-from django.db import models
-from django.urls import reverse
 import hashlib
 from datetime import datetime
+
+from django.db import models
+from django.urls import reverse
 
 
 class Tag(models.Model):

@@ -29,3 +29,6 @@ dev = [
     "ruff",
     "mypy",
 ]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]  # E=errors, F=pyflakes, I=isort

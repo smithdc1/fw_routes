@@ -10,11 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
-from pathlib import Path
-from dotenv import load_dotenv
-import dj_database_url
 import os
+from pathlib import Path
 
+import dj_database_url
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -56,7 +56,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # Add WhiteNoise right after SecurityMiddleware
+    # Add WhiteNoise right after SecurityMiddleware
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -98,7 +99,9 @@ DATABASES = {"default": dj_database_url.config(default="sqlite:///db.sqlite3")}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": (
+            "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+        ),
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
@@ -140,7 +143,11 @@ MEDIA_URL = "/media/"
 
 # Content Security Policy - Allow images from CDN
 SECURE_CONTENT_SECURITY_POLICY = {
-    "img-src": ["'self'", "https://files.smithdc.uk", "https://s3.us-east-005.backblazeb2.com"],
+    "img-src": [
+        "'self'",
+        "https://files.smithdc.uk",
+        "https://s3.us-east-005.backblazeb2.com",
+    ],
     "default-src": ["'self'"],
 }
 

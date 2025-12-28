@@ -1,9 +1,10 @@
+import defusedxml.ElementTree as ET
 from django import forms
 from django.core.exceptions import ValidationError
-from django_tomselect.forms import TomSelectModelMultipleChoiceField
 from django_tomselect.app_settings import TomSelectConfig
+from django_tomselect.forms import TomSelectModelMultipleChoiceField
+
 from .models import Route, Tag
-import defusedxml.ElementTree as ET
 
 
 def validate_gpx_file(file):

@@ -81,6 +81,21 @@ class ValidateGPXFileTest(TestCase):
         with self.assertRaises(ValidationError):
             validate_gpx_file(empty_file)
 
+    def test_generic_exception_handling(self):
+        """Test generic exception handling in validate_gpx_file."""
+        from unittest.mock import patch
+
+        gpx_file = SimpleUploadedFile(
+            "test.gpx", b"<gpx></gpx>", content_type="application/gpx+xml"
+        )
+
+        # Mock defusedxml.ElementTree.parse to raise a non-ParseError exception
+        with patch("defusedxml.ElementTree.parse") as mock_parse:
+            mock_parse.side_effect = IOError("Simulated IO error")
+            with self.assertRaises(ValidationError) as cm:
+                validate_gpx_file(gpx_file)
+            self.assertIn("Simulated IO error", str(cm.exception))
+
 
 class RouteUploadFormTest(TestCase):
     """Tests for the RouteUploadForm."""

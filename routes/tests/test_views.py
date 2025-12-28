@@ -325,6 +325,49 @@ class RouteDetailViewTest(TestCase):
         response = self.client.get(reverse("route_detail", kwargs={"pk": 99999}))
         self.assertEqual(response.status_code, 404)
 
+    def test_invalid_action(self):
+        """Test that invalid action redirects back to route detail."""
+        route = Route.objects.create(
+            name="Test Route", route_coordinates=[[52.4603, -2.1638]]
+        )
+
+        response = self.client.post(
+            reverse("route_detail", kwargs={"pk": route.pk}),
+            {"action": "invalid_action"},
+        )
+
+        # Invalid action should still redirect back to route detail (no error)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("route_detail", kwargs={"pk": route.pk}))
+
+    def test_update_tags_with_validation_error(self):
+        """Test updating tags with invalid form data shows errors."""
+        from unittest.mock import patch
+
+        route = Route.objects.create(
+            name="Test Route", route_coordinates=[[52.4603, -2.1638]]
+        )
+
+        # Mock TagForm to simulate validation errors
+        with patch("routes.views.TagForm") as MockForm:
+            mock_form = MockForm.return_value
+            mock_form.is_valid.return_value = False
+            mock_form.errors = {"tags": ["Invalid tag data"]}
+
+            response = self.client.post(
+                reverse("route_detail", kwargs={"pk": route.pk}),
+                {"action": "update_tags", "tags": "invalid"},
+                follow=True,
+            )
+
+            # Should redirect back to route detail
+            self.assertEqual(response.status_code, 200)
+            # Check that error message is shown
+            messages_list = list(response.context["messages"])
+            self.assertTrue(
+                any("tags: Invalid tag data" in str(m) for m in messages_list)
+            )
+
 
 class RouteShareViewTest(TestCase):
     """Tests for the route_share view (public access)."""
@@ -568,6 +611,22 @@ class TagAutocompleteViewTest(TestCase):
         response = self.client.get(reverse("tag-autocomplete"))
         # Should redirect to login or return 403
         self.assertIn(response.status_code, [302, 403])
+
+    def test_autocomplete_exception_handling(self):
+        """Test that autocomplete handles exceptions gracefully."""
+        from unittest.mock import patch
+
+        response = self.client.get(reverse("tag-autocomplete") + "?search=test")
+
+        # Mock Tag.objects.filter to raise an exception
+        with patch("routes.models.Tag.objects.filter") as mock_filter:
+            mock_filter.side_effect = Exception("Database error")
+            response = self.client.get(reverse("tag-autocomplete") + "?search=test")
+
+            # Should return empty results instead of crashing
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertEqual(data["results"], [])
 
 
 class FaviconViewTest(TestCase):

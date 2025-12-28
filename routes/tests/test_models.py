@@ -167,12 +167,6 @@ class RouteModelTest(TestCase):
         # 8km = ~4.97 miles, at 12mph = ~24.85 minutes
         self.assertEqual(route.estimated_time, "24m")
 
-    def test_estimated_time_exact_hours(self):
-        """Test estimated_time for exact hour values."""
-        route = Route.objects.create(name="Medium Route", distance_km=19.31)
-        # 19.31km = ~12 miles, at 12mph = ~1 hour
-        self.assertIn(route.estimated_time, ["59m", "1h"])  # Account for rounding
-
     def test_estimated_time_hours_and_minutes(self):
         """Test estimated_time with hours and minutes."""
         route = Route.objects.create(name="Long Route", distance_km=32.19)
@@ -183,6 +177,17 @@ class RouteModelTest(TestCase):
         """Test estimated_time with zero distance."""
         route = Route.objects.create(name="Zero Route", distance_km=0)
         self.assertEqual(route.estimated_time, "N/A")
+
+    def test_estimated_time_exact_hours(self):
+        """Test estimated_time with distance that results in exact hours."""
+        # Need >12 miles to get 60+ minutes after int() truncation
+        # 12.01 miles = 19.33 km = 60.05 minutes -> 60 minutes = 1 hour (at 12mph)
+        route = Route.objects.create(name="One Hour Route", distance_km=19.33)
+        self.assertEqual(route.estimated_time, "1h")
+
+        # 24.01 miles = 38.66 km = 120.05 minutes -> 120 minutes = 2 hours
+        route2 = Route.objects.create(name="Two Hour Route", distance_km=38.66)
+        self.assertEqual(route2.estimated_time, "2h")
 
     def test_gpx_file_url_with_file(self):
         """Test gpx_file_url property when file exists."""

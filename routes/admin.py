@@ -1,6 +1,7 @@
-from django.contrib import admin
 from django import forms
-from .models import Route, Tag, StartPoint
+from django.contrib import admin
+
+from .models import Route, StartPoint, Tag
 
 
 class StartPointAdminForm(forms.ModelForm):

@@ -1,8 +1,10 @@
-from django_tasks import task
-from .models import Route
-from .utils import get_location_name, generate_static_map_image
 import hashlib
 from datetime import datetime
+
+from django_tasks import task
+
+from .models import Route
+from .utils import generate_static_map_image, get_location_name
 
 
 @task()
@@ -39,7 +41,9 @@ def process_route_async(route_id):
         if route.route_coordinates and not route.thumbnail_image:
             thumbnail = generate_static_map_image(route.route_coordinates)
             if thumbnail:
-                thumb_filename = f"{hashlib.md5(f'{datetime.now()}{route.name}'.encode()).hexdigest()}.webp"
+                hash_input = f"{datetime.now()}{route.name}".encode()
+                thumb_hash = hashlib.md5(hash_input).hexdigest()
+                thumb_filename = f"{thumb_hash}.webp"
                 route.thumbnail_image.save(thumb_filename, thumbnail, save=True)
 
         return f"Successfully processed route {route_id}"

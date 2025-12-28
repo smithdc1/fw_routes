@@ -1,8 +1,10 @@
+import re
+import time
+
 from django.core.management.base import BaseCommand
+
 from routes.models import Route, StartPoint
 from routes.utils import find_closest_start_point, get_location_name
-import time
-import re
 
 
 class Command(BaseCommand):
@@ -156,7 +158,7 @@ class Command(BaseCommand):
         self.stdout.write("\n" + "=" * 60)
         if dry_run:
             self.stdout.write(self.style.WARNING("DRY RUN - No changes were made"))
-        self.stdout.write(self.style.SUCCESS(f"\nSummary:"))
+        self.stdout.write(self.style.SUCCESS("\nSummary:"))
         self.stdout.write(f"  Matched to start points: {matched_count}")
         if force_geocode:
             self.stdout.write(f"  Re-geocoded: {geocoded_count}")

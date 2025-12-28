@@ -151,6 +151,20 @@ class RegenerateThumbnailsCommandTest(TestCase):
         self.assertIn("Summary", output)
         self.assertIn("Successfully regenerated: 2", output)
 
+    @patch("routes.management.commands.regenerate_thumbnails.generate_static_map_image")
+    def test_generation_returns_none(self, mock_generate):
+        """Test error handling when thumbnail generation returns None."""
+        Route.objects.create(name="Route 1", route_coordinates=[[52.4603, -2.1638]])
+
+        # Simulate generation returning None
+        mock_generate.return_value = None
+
+        out = StringIO()
+        call_command("regenerate_thumbnails", "--all", stdout=out)
+
+        output = out.getvalue()
+        self.assertIn("Failed to generate thumbnail", output)
+
 
 class UpdateStartLocationsCommandTest(TestCase):
     """Tests for update_start_locations management command."""
@@ -333,3 +347,48 @@ class UpdateStartLocationsCommandTest(TestCase):
 
         output = out.getvalue()
         self.assertIn("Error", output)
+
+    @patch("routes.management.commands.update_start_locations.find_closest_start_point")
+    def test_verbose_output_unchanged_location(self, mock_find):
+        """Test verbose output when location matches and doesn't change."""
+        route = Route.objects.create(
+            name="Route 1",
+            start_lat=52.4603,
+            start_lon=-2.1638,
+            start_location="Test Point",
+        )
+
+        start_point = StartPoint.objects.create(
+            name="Test Point", latitude=52.4603, longitude=-2.1638
+        )
+        mock_find.return_value = start_point
+
+        out = StringIO()
+        call_command("update_start_locations", "--all", verbosity=2, stdout=out)
+
+        output = out.getvalue()
+        self.assertIn("Already matches", output)
+
+    @patch("routes.management.commands.update_start_locations.get_location_name")
+    @patch("routes.management.commands.update_start_locations.find_closest_start_point")
+    def test_force_geocode_with_existing_location_name(self, mock_find, mock_geocode):
+        """Test --force-geocode skips routes with existing proper location names."""
+        Route.objects.create(
+            name="Route 1",
+            start_lat=52.4603,
+            start_lon=-2.1638,
+            start_location="Birmingham, England",
+        )
+
+        # No start point match
+        mock_find.return_value = None
+
+        out = StringIO()
+        call_command(
+            "update_start_locations", "--all", "--force-geocode", verbosity=2, stdout=out
+        )
+
+        # Should NOT call geocoding API since location is not coordinate-like
+        self.assertFalse(mock_geocode.called)
+        output = out.getvalue()
+        self.assertIn("Already has location", output)

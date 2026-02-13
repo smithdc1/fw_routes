@@ -56,9 +56,10 @@ def parse_gpx(gpx_file):
         data["elevation_gain"] += uphill if uphill else 0
 
     for route in gpx.routes:
-        data["distance_km"] += route.length_3d() / 1000 if route.length_3d() else 0
-        uphill, downhill = route.get_uphill_downhill()
-        data["elevation_gain"] += uphill if uphill else 0
+        # GPXRoute uses length() instead of length_3d()
+        length = route.length() or route.length_2d() or 0
+        data["distance_km"] += length / 1000 if length else 0
+        # Note: GPXRoute objects don't have elevation data methods like GPXTrack does
 
     return data
 
